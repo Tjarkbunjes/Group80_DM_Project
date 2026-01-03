@@ -68,6 +68,47 @@ st.markdown("""
         font-size: 15px !important;
     }
 
+    /* Checkbox styling - GREEN - Multiple approaches for compatibility */
+    [data-testid="stSidebar"] input[type="checkbox"] {
+        accent-color: #10b981 !important;
+        cursor: pointer !important;
+    }
+
+    /* For browsers that don't support accent-color */
+    [data-testid="stSidebar"] input[type="checkbox"]:checked {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+    }
+
+    /* Streamlit specific checkbox styling */
+    [data-testid="stSidebar"] input[type="checkbox"]:checked::before {
+        background-color: #10b981 !important;
+    }
+
+    /* Alternative Streamlit checkbox selectors */
+    [data-testid="stCheckbox"] input[type="checkbox"] {
+        accent-color: #10b981 !important;
+    }
+
+    [data-testid="stCheckbox"] input[type="checkbox"]:checked {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+    }
+
+    /* The checkmark itself */
+    [data-testid="stCheckbox"] span[data-testid="stMarkdownContainer"] {
+        color: #374151 !important;
+    }
+
+    /* Checkbox container styling */
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] {
+        color: #374151 !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
+        color: #374151 !important;
+    }
+
     /* Sidebar expander */
     [data-testid="stSidebar"] [data-testid="stExpander"] {
         background-color: #ffffff !important;
@@ -108,7 +149,7 @@ st.markdown("""
         color: #374151 !important;
     }
 
-    [data-testid="stSidebar"] input {
+    [data-testid="stSidebar"] input:not([type="checkbox"]) {
         background-color: #ffffff !important;
         border-color: #d1d5db !important;
         color: #374151 !important;
@@ -393,21 +434,21 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
             xaxis=dict(
                 title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#047857', size=12)),
                 backgroundcolor='#f9fafb',
-                gridcolor='#d1fae5',
+                gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
             yaxis=dict(
                 title=dict(text="<b>PC2: Travel Pattern Axis</b>", font=dict(color='#047857', size=12)),
                 backgroundcolor='#f9fafb',
-                gridcolor='#d1fae5',
+                gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
             zaxis=dict(
                 title=dict(text="<b>PC3: Secondary Pattern Axis</b>", font=dict(color='#047857', size=12)),
                 backgroundcolor='#f9fafb',
-                gridcolor='#d1fae5',
+                gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
@@ -546,7 +587,7 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
         font=dict(color='#1f2937'),
         xaxis=dict(
             title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#047857')),
-            gridcolor='#d1fae5',
+            gridcolor='#d1d5db',
             tickfont=dict(color='#065f46'),
             range=[0, 100]
         ),
@@ -556,13 +597,18 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
             showgrid=False
         ),
         legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='center',
+            x=0.5,
             bgcolor='rgba(255, 255, 255, 0.9)',
             bordercolor='#d1d5db',
             borderwidth=1,
-            font=dict(color='#1f2937'),
-            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#1f2937'))
+            font=dict(color='#1f2937', size=10),
+            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#1f2937', size=11))
         ),
-        margin=dict(l=10, r=10, t=20, b=40),
+        margin=dict(l=10, r=10, t=80, b=40),
         height=400
     )
 
@@ -603,14 +649,14 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     freq_p90 = df_with_fm['Frequency'].quantile(0.90)
     mon_p90 = df_with_fm['Monetary'].quantile(0.90)
 
-    # Define colors
+    # Define colors (matching Jupyter notebook colors)
     segment_colors = {
-        'Champions': '#10b981',      # Green
-        'Frequent Flyer': '#3b82f6', # Blue
-        'Premium Occasional': '#f59e0b', # Amber
-        'At Risk': '#ec4899'         # Pink
+        'Champions': '#45AF28',      # Light green
+        'Frequent Flyer': '#00622D', # Dark green
+        'Premium Occasional': '#00823C', # Medium green
+        'At Risk': '#6BCF5D'         # Lighter green
     }
-    elite_color = '#8b5cf6'  # Purple for Elite
+    elite_color = '#00411E'  # Darkest green for Elite
 
     fig = go.Figure()
 
@@ -618,19 +664,19 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     max_freq = df_with_fm['Frequency'].max() * 1.05
     max_mon = df_with_fm['Monetary'].max() * 1.05
 
-    # Champions quadrant highlight
+    # Champions quadrant highlight (using Champions color)
     fig.add_shape(type="rect",
         x0=freq_median, x1=max_freq, y0=mon_median, y1=max_mon,
-        fillcolor='rgba(16, 185, 129, 0.08)', line=dict(width=0), layer='below')
+        fillcolor='rgba(69, 175, 40, 0.08)', line=dict(width=0), layer='below')
 
-    # Elite zone highlight
+    # Elite zone highlight (using Elite color)
     fig.add_shape(type="rect",
         x0=freq_p90, x1=max_freq, y0=mon_p90, y1=max_mon,
-        fillcolor='rgba(139, 92, 246, 0.15)', line=dict(width=0), layer='below')
+        fillcolor='rgba(0, 65, 30, 0.15)', line=dict(width=0), layer='below')
 
     # Add median reference lines
-    fig.add_hline(y=mon_median, line_dash="dash", line_color="#6b7280", line_width=2, opacity=0.7)
-    fig.add_vline(x=freq_median, line_dash="dash", line_color="#6b7280", line_width=2, opacity=0.7)
+    fig.add_hline(y=mon_median, line_dash="dash", line_color="#313131", line_width=2, opacity=0.7)
+    fig.add_vline(x=freq_median, line_dash="dash", line_color="#313131", line_width=2, opacity=0.7)
 
     # Plot segments
     for segment in ['At Risk', 'Premium Occasional', 'Frequent Flyer', 'Champions']:
@@ -692,34 +738,57 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
                     text=[f"Customer {row['Loyalty#']}" for _, row in segment_data.iterrows()]
                 ))
 
+    # Calculate label positions in corners of quadrants
+    min_freq = df_with_fm['Frequency'].min()
+    min_mon = df_with_fm['Monetary'].min()
+
+    # Position labels in corners
+    # Champions - bottom left corner of its quadrant
+    champions_x = freq_median * 1.05
+    champions_y = mon_median * 1.05
+
+    # Premium Occasional - top left corner
+    premium_x = min_freq * 1.1
+    premium_y = max_mon * 0.95
+
+    # Frequent Flyer - bottom right corner
+    frequent_x = max_freq * 0.95
+    frequent_y = min_mon * 1.1
+
+    # At Risk - bottom left corner
+    atrisk_x = min_freq * 1.1
+    atrisk_y = min_mon * 1.1
+
+    # Elite - top right corner of Champions quadrant
+    elite_x = max_freq * 0.95;
+    elite_y = max_mon * 0.95;
+
     # Add quadrant labels as annotations
-    fig.add_annotation(x=freq_median * 1.4, y=mon_median * 1.4,
+    fig.add_annotation(x=champions_x, y=champions_y,
         text="Champions", showarrow=False,
-        font=dict(size=14, color='#065f46', family="Arial Black"),
-        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
+        font=dict(size=14, color='#00411E', family="Arial Black"),
+        xanchor='left', yanchor='bottom')
 
-    fig.add_annotation(x=freq_median * 0.3, y=mon_median * 1.4,
-        text="Premium<br>Occasional", showarrow=False,
-        font=dict(size=14, color='#065f46', family="Arial Black"),
-        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
+    fig.add_annotation(x=premium_x, y=premium_y,
+        text="Premium Occasional", showarrow=False,
+        font=dict(size=14, color='#00411E', family="Arial Black"),
+        xanchor='left', yanchor='top')
 
-    fig.add_annotation(x=freq_median * 1.4, y=mon_median * 0.3,
-        text="Frequent<br>Flyer", showarrow=False,
-        font=dict(size=14, color='#065f46', family="Arial Black"),
-        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
+    fig.add_annotation(x=frequent_x, y=frequent_y,
+        text="Frequent Flyer", showarrow=False,
+        font=dict(size=14, color='#00411E', family="Arial Black"),
+        xanchor='right', yanchor='bottom')
 
-    fig.add_annotation(x=freq_median * 0.3, y=mon_median * 0.3,
+    fig.add_annotation(x=atrisk_x, y=atrisk_y,
         text="At Risk", showarrow=False,
-        font=dict(size=14, color='#065f46', family="Arial Black"),
-        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
+        font=dict(size=14, color='#00411E', family="Arial Black"),
+        xanchor='left', yanchor='bottom')
 
     # Add Elite label
-    elite_center_x = (freq_p90 + max_freq) / 2
-    elite_center_y = (mon_p90 + max_mon) / 2
-    fig.add_annotation(x=elite_center_x, y=elite_center_y,
+    fig.add_annotation(x=elite_x, y=elite_y,
         text="Elite", showarrow=False,
-        font=dict(size=13, color='#065f46', family="Arial Black"),
-        bgcolor='rgba(139, 92, 246, 0.4)', borderpad=4)
+        font=dict(size=13, color='#00411E', family="Arial Black"),
+        xanchor='right', yanchor='top')
 
     fig.update_layout(
         title=dict(
@@ -728,14 +797,14 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
         ),
         xaxis=dict(
             title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#047857')),
-            gridcolor='#d1fae5',
+            gridcolor='#d1d5db',
             tickfont=dict(color='#065f46'),
             showgrid=True,
             zeroline=False
         ),
         yaxis=dict(
             title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#047857')),
-            gridcolor='#d1fae5',
+            gridcolor='#d1d5db',
             tickfont=dict(color='#065f46'),
             showgrid=True,
             zeroline=False
@@ -756,6 +825,150 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure:
+    """
+    Create Sankey diagram showing how selected customers are distributed across
+    behavioral clusters and FM segments compared to the overall population.
+    """
+    
+    # Determine which FM column to use
+    fg_column = None
+    if 'fm_segment_fg1' in df_selected.columns and df_selected['fm_segment_fg1'].notna().any():
+        fg_column = 'fm_segment_fg1'
+    elif 'fm_segment_fg2' in df_selected.columns and df_selected['fm_segment_fg2'].notna().any():
+        fg_column = 'fm_segment_fg2'
+    
+    if fg_column is None:
+        # Return empty figure if no FM data
+        fig = go.Figure()
+        fig.update_layout(
+            title="FM segment data not available",
+            paper_bgcolor='#ffffff',
+            height=400
+        )
+        return fig
+    
+    # Filter to customers with FM segments
+    df_sel_fm = df_selected[df_selected[fg_column].notna()].copy()
+    df_pop_fm = df_population[df_population[fg_column].notna()].copy()
+    
+    # Create flow data: Behavioral Cluster -> FM Segment
+    cluster_to_fm_selected = df_sel_fm.groupby(['cluster_name', fg_column]).size()
+    cluster_to_fm_population = df_pop_fm.groupby(['cluster_name', fg_column]).size()
+    
+    # Create nodes
+    clusters = sorted(df_pop_fm['cluster_name'].unique())
+    fm_segments = sorted(df_pop_fm[fg_column].unique())
+    
+    # Node list: [clusters, fm_segments]
+    node_labels = clusters + fm_segments
+    
+    # Create indices
+    cluster_indices = {name: i for i, name in enumerate(clusters)}
+    fm_indices = {name: i + len(clusters) for i, name in enumerate(fm_segments)}
+    
+    # Build links for selected customers
+    sources_sel = []
+    targets_sel = []
+    values_sel = []
+    
+    for (cluster, fm_seg), count in cluster_to_fm_selected.items():
+        sources_sel.append(cluster_indices[cluster])
+        targets_sel.append(fm_indices[fm_seg])
+        values_sel.append(count)
+    
+    # Build links for population (for comparison values)
+    population_flows = {}
+    for (cluster, fm_seg), count in cluster_to_fm_population.items():
+        population_flows[(cluster, fm_seg)] = count
+    
+    # Calculate percentage representation
+    hover_texts = []
+    for i in range(len(sources_sel)):
+        cluster_idx = sources_sel[i]
+        fm_idx = targets_sel[i]
+        cluster_name = clusters[cluster_idx]
+        fm_name = fm_segments[fm_idx - len(clusters)]
+        
+        sel_count = values_sel[i]
+        pop_count = population_flows.get((cluster_name, fm_name), 0)
+        
+        if pop_count > 0:
+            percentage = (sel_count / pop_count) * 100
+            hover_texts.append(
+                f"{cluster_name} → {fm_name}<br>"
+                f"Selected: {sel_count:,} customers<br>"
+                f"Population: {pop_count:,} customers<br>"
+                f"Representation: {percentage:.1f}%"
+            )
+        else:
+            hover_texts.append(
+                f"{cluster_name} → {fm_name}<br>"
+                f"Selected: {sel_count:,} customers"
+            )
+    
+    # Define colors for links (based on behavioral cluster)
+    link_colors = []
+    for src_idx in sources_sel:
+        cluster_id = [k for k, v in CLUSTER_CONFIG.items() 
+                     if v['name'] == clusters[src_idx]][0]
+        cluster_color = CLUSTER_CONFIG[cluster_id]['color']
+        # Add transparency
+        if cluster_color.startswith('#'):
+            rgb = tuple(int(cluster_color[i:i+2], 16) for i in (1, 3, 5))
+            link_colors.append(f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, 0.4)')
+        else:
+            link_colors.append(cluster_color)
+    
+    # Node colors
+    node_colors = []
+    for cluster in clusters:
+        cluster_id = [k for k, v in CLUSTER_CONFIG.items() if v['name'] == cluster][0]
+        node_colors.append(CLUSTER_CONFIG[cluster_id]['color'])
+    
+    # FM segment colors (green shades)
+    fm_colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0']
+    for i in range(len(fm_segments)):
+        node_colors.append(fm_colors[i % len(fm_colors)])
+    
+    # Create Sankey diagram
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color='white', width=2),
+            label=node_labels,
+            color=node_colors,
+            customdata=[f"n={df_sel_fm[df_sel_fm['cluster_name']==c].shape[0]:,}" if c in clusters
+                       else f"n={df_sel_fm[df_sel_fm[fg_column]==c].shape[0]:,}" 
+                       for c in node_labels],
+            hovertemplate='%{label}<br>%{customdata}<extra></extra>'
+        ),
+        link=dict(
+            source=sources_sel,
+            target=targets_sel,
+            value=values_sel,
+            color=link_colors,
+            customdata=hover_texts,
+            hovertemplate='%{customdata}<extra></extra>'
+        )
+    )])
+    
+    fig.update_layout(
+        title=dict(
+            text=f"Customer Journey: Behavioral Cluster → FM Segment<br><sub>Selected: {len(df_sel_fm):,} | Population: {len(df_pop_fm):,}</sub>",
+            font=dict(color='#047857', size=14)
+        ),
+        font=dict(size=11, color='#1f2937'),
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#f9fafb',
+        height=500,
+        margin=dict(l=10, r=10, t=60, b=10)
+    )
+    
+    return fig
+
+
 # --- Main App ---
 
 def main():
@@ -773,13 +986,13 @@ def main():
         # --- BEHAVIORAL FILTERS ---
         with st.expander("Behavioral Filters", expanded=True):
 
-            # Customer Segments
-            segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
-            selected_segments = st.multiselect(
-                "Customer Segments",
-                options=segment_options,
-                default=segment_options
-            )
+            # Customer Segments - Using nested expander for dropdown effect
+            with st.expander("**Customer Segments**", expanded=False):
+                segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
+                selected_segments = []
+                for segment in segment_options:
+                    if st.checkbox(segment, value=True, key=f"seg_{segment}"):
+                        selected_segments.append(segment)
 
             # Redemption Frequency
             redemption_range = st.slider(
@@ -839,67 +1052,67 @@ def main():
         # --- DEMOGRAPHIC FILTERS ---
         with st.expander("Demographic Filters", expanded=False):
             # Province
-            province_options = sorted([p for p in df_full['Province or State'].unique() if pd.notna(p)])
-            selected_provinces = st.multiselect(
-                "Province",
-                options=province_options,
-                default=province_options
-            )
+            with st.expander("**Province**", expanded=False):
+                province_options = sorted([p for p in df_full['Province or State'].unique() if pd.notna(p)])
+                selected_provinces = []
+                for province in province_options:
+                    if st.checkbox(province, value=True, key=f"prov_{province}"):
+                        selected_provinces.append(province)
 
             # City
-            city_options = sorted([c for c in df_full['City'].unique() if pd.notna(c) and c != 'Unknown'])
-            selected_cities = st.multiselect(
-                "City",
-                options=city_options,
-                default=city_options
-            )
+            with st.expander("**City**", expanded=False):
+                city_options = sorted([c for c in df_full['City'].unique() if pd.notna(c) and c != 'Unknown'])
+                selected_cities = []
+                for city in city_options:
+                    if st.checkbox(city, value=True, key=f"city_{city}"):
+                        selected_cities.append(city)
 
             # FSA
-            fsa_options = sorted([f for f in df_full['FSA'].unique() if pd.notna(f)])
-            selected_fsa = st.multiselect(
-                "FSA (Forward Sortation Area)",
-                options=fsa_options,
-                default=fsa_options
-            )
+            with st.expander("**FSA (Forward Sortation Area)**", expanded=False):
+                fsa_options = sorted([f for f in df_full['FSA'].unique() if pd.notna(f)])
+                selected_fsa = []
+                for fsa in fsa_options:
+                    if st.checkbox(fsa, value=True, key=f"fsa_{fsa}"):
+                        selected_fsa.append(fsa)
 
             # Gender
-            gender_options = sorted([g for g in df_full['Gender'].unique() if pd.notna(g)])
-            selected_gender = st.multiselect(
-                "Gender",
-                options=gender_options,
-                default=gender_options
-            )
+            with st.expander("**Gender**", expanded=False):
+                gender_options = sorted([g for g in df_full['Gender'].unique() if pd.notna(g)])
+                selected_gender = []
+                for gender in gender_options:
+                    if st.checkbox(gender, value=True, key=f"gender_{gender}"):
+                        selected_gender.append(gender)
 
             # Education Level
-            education_options = sorted([e for e in df_full['Education'].unique() if pd.notna(e) and e != 'Unknown'])
-            selected_education = st.multiselect(
-                "Education Level",
-                options=education_options,
-                default=education_options
-            )
+            with st.expander("**Education Level**", expanded=False):
+                education_options = sorted([e for e in df_full['Education'].unique() if pd.notna(e) and e != 'Unknown'])
+                selected_education = []
+                for education in education_options:
+                    if st.checkbox(education, value=True, key=f"edu_{education}"):
+                        selected_education.append(education)
 
             # Location Code
-            location_options = sorted([l for l in df_full['Location Code'].unique() if pd.notna(l)])
-            selected_location = st.multiselect(
-                "Location Code",
-                options=location_options,
-                default=location_options
-            )
+            with st.expander("**Location Code**", expanded=False):
+                location_options = sorted([l for l in df_full['Location Code'].unique() if pd.notna(l)])
+                selected_location = []
+                for location in location_options:
+                    if st.checkbox(location, value=True, key=f"loc_{location}"):
+                        selected_location.append(location)
 
         # --- VALUE-BASED FILTERS ---
         with st.expander("Value-Based Filters", expanded=False):
             # Focus Group Selection
-            focus_group_options = []
-            if 'fm_segment_fg1' in df_full.columns:
-                focus_group_options.append('Focus Group 1: Loyalty Members | Active')
-            if 'fm_segment_fg2' in df_full.columns:
-                focus_group_options.append('Focus Group 2: Ex-Loyalty Members | Active')
+            with st.expander("**Focus Groups**", expanded=False):
+                focus_group_options = []
+                if 'fm_segment_fg1' in df_full.columns:
+                    focus_group_options.append('Focus Group 1: Loyalty Members | Active')
+                if 'fm_segment_fg2' in df_full.columns:
+                    focus_group_options.append('Focus Group 2: Ex-Loyalty Members | Active')
 
-            selected_focus_groups = st.multiselect(
-                "Focus Groups",
-                options=focus_group_options,
-                default=focus_group_options
-            )
+                selected_focus_groups = []
+                for fg in focus_group_options:
+                    if st.checkbox(fg, value=True, key=f"fg_{fg}"):
+                        selected_focus_groups.append(fg)
 
             # Income Range
             income_range = st.slider(
@@ -1018,9 +1231,9 @@ def main():
         persona_col1, persona_col2 = st.columns(2)
 
         with persona_col1:
-            st.markdown("#### Behavioral Signature")
-            fig_radar = create_persona_radar(df_filtered, df_full)
-            st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
+            st.markdown("#### Segment Migration Flow")
+            fig_sankey = create_segment_migration_sankey(df_filtered, df_full)
+            st.plotly_chart(fig_sankey, width='stretch', config={'displayModeBar': False})
 
         with persona_col2:
             st.markdown("#### Demographic Composition")
