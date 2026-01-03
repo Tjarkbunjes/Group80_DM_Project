@@ -795,15 +795,6 @@ def main():
 
         st.divider()
 
-        # Data Source Info
-        st.markdown(f"""
-        <p style='font-size: 12px; color: #6ee7b7; text-align: center;'>
-            <b>Data Source</b><br>
-            2020-2021 Active Customer Base<br>
-            (n={len(df_full):,})
-        </p>
-        """, unsafe_allow_html=True)
-
     # ==================== APPLY FILTERS ====================
     df_filtered = df_full.copy()
 
