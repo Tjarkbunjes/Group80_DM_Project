@@ -35,6 +35,19 @@ st.markdown("""
         border-right: 2px solid #10b981;
     }
 
+    /* Make multiselect and slider widgets green */
+    .stMultiSelect [data-baseweb="tag"] {
+        background-color: #10b981 !important;
+    }
+
+    .stSlider [data-baseweb="slider"] [role="slider"] {
+        background-color: #10b981 !important;
+    }
+
+    .stSlider [data-testid="stThumbValue"] {
+        color: #10b981 !important;
+    }
+
     /* Headers */
     h1 {
         color: #10b981 !important;
@@ -158,11 +171,17 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
 
     fig = go.Figure()
 
+    # Store cluster counts for annotation
+    cluster_counts = {}
+
     for cluster_id in sorted(df['Behavioral_Cluster'].unique()):
         cluster_df = df[df['Behavioral_Cluster'] == cluster_id]
         cluster_info = CLUSTER_CONFIG.get(cluster_id, {})
         cluster_name = cluster_info.get('name', f'Cluster {cluster_id}')
         cluster_color = cluster_info.get('color', '#6b7280')
+
+        # Store count
+        cluster_counts[cluster_name] = len(cluster_df)
 
         fig.add_trace(go.Scatter3d(
             x=cluster_df['pca_1'],
@@ -231,11 +250,33 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
             bordercolor='#10b981',
             borderwidth=2,
             font=dict(color='#d1fae5', size=11),
-            title=dict(text="<b>Customer Segments</b>", font=dict(size=12, color='#10b981'))
+            title=dict(text="<b>Customer Segments</b>", font=dict(size=12, color='#10b981')),
+            x=1.0,
+            y=0.9
         ),
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=0, r=0, t=0, b=100),
         height=600,
         scene_camera=dict(eye=dict(x=1.5, y=1.5, z=1.3))
+    )
+
+    # Add cluster count annotation box below legend
+    count_text = "<b>Cluster Counts:</b><br>"
+    for cluster_name in sorted(cluster_counts.keys()):
+        count_text += f"• {cluster_name}: {cluster_counts[cluster_name]:,}<br>"
+    count_text += f"<br><b>Total: {len(df):,}</b>"
+
+    fig.add_annotation(
+        text=count_text,
+        xref="paper", yref="paper",
+        x=1.0, y=-0.1,
+        xanchor="right", yanchor="top",
+        showarrow=False,
+        bgcolor='rgba(6, 95, 70, 0.8)',
+        bordercolor='#10b981',
+        borderwidth=2,
+        borderpad=10,
+        font=dict(color='#d1fae5', size=10),
+        align='left'
     )
 
     return fig
@@ -376,14 +417,39 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
     return fig
 
 
-def create_fm_matrix(df: pd.DataFrame, fg_column: str, tier_column: str, title_suffix: str) -> go.Figure:
-    """Create FM Matrix scatter plot with segment quadrants."""
+def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
+    """Create combined FM Matrix scatter plot with both focus groups."""
+
+    # Determine which focus group column to use (prefer fg1, fallback to fg2)
+    fg_column = None
+    tier_column = None
+
+    if 'fm_segment_fg1' in df.columns and df['fm_segment_fg1'].notna().any():
+        fg_column = 'fm_segment_fg1'
+        tier_column = 'fm_tier_fg1'
+    elif 'fm_segment_fg2' in df.columns and df['fm_segment_fg2'].notna().any():
+        fg_column = 'fm_segment_fg2'
+        tier_column = 'fm_tier_fg2'
+
+    if fg_column is None:
+        # Return empty figure if no FM data
+        fig = go.Figure()
+        fig.update_layout(
+            title="FM Matrix data not available",
+            paper_bgcolor='#0a0e1a',
+            plot_bgcolor='#1a1f2e',
+            font=dict(color='#d1fae5')
+        )
+        return fig
+
+    # Filter to only rows with FM segment data
+    df_with_fm = df[df[fg_column].notna()].copy()
 
     # Calculate medians and 90th percentiles
-    freq_median = df['Frequency'].median()
-    mon_median = df['Monetary'].median()
-    freq_p90 = df['Frequency'].quantile(0.90)
-    mon_p90 = df['Monetary'].quantile(0.90)
+    freq_median = df_with_fm['Frequency'].median()
+    mon_median = df_with_fm['Monetary'].median()
+    freq_p90 = df_with_fm['Frequency'].quantile(0.90)
+    mon_p90 = df_with_fm['Monetary'].quantile(0.90)
 
     # Define colors
     segment_colors = {
@@ -397,8 +463,8 @@ def create_fm_matrix(df: pd.DataFrame, fg_column: str, tier_column: str, title_s
     fig = go.Figure()
 
     # Add quadrant backgrounds
-    max_freq = df['Frequency'].max() * 1.05
-    max_mon = df['Monetary'].max() * 1.05
+    max_freq = df_with_fm['Frequency'].max() * 1.05
+    max_mon = df_with_fm['Monetary'].max() * 1.05
 
     # Champions quadrant highlight
     fig.add_shape(type="rect",
@@ -416,7 +482,7 @@ def create_fm_matrix(df: pd.DataFrame, fg_column: str, tier_column: str, title_s
 
     # Plot segments
     for segment in ['At Risk', 'Premium Occasional', 'Frequent Flyer', 'Champions']:
-        segment_data = df[df[fg_column] == segment]
+        segment_data = df_with_fm[df_with_fm[fg_column] == segment]
 
         if segment == 'Champions':
             # Separate Elite from Champions
@@ -505,7 +571,7 @@ def create_fm_matrix(df: pd.DataFrame, fg_column: str, tier_column: str, title_s
 
     fig.update_layout(
         title=dict(
-            text=f'FM Matrix: {title_suffix}<br><sub>n={len(df):,} customers</sub>',
+            text=f'FM Matrix: Value-Based Segmentation<br><sub>n={len(df_with_fm):,} customers</sub>',
             font=dict(color='#10b981', size=14)
         ),
         xaxis=dict(
@@ -552,57 +618,180 @@ def main():
     with st.sidebar:
         st.markdown("## Filters")
 
-        # Customer Segments
-        segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
-        selected_segments = st.multiselect(
-            "Customer Segments",
-            options=segment_options,
-            default=segment_options
-        )
+        # --- BEHAVIORAL FILTERS ---
+        with st.expander("Behavioral Filters", expanded=True):
+            # Select All button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("Reset All", key="reset_behavioral"):
+                    st.rerun()
 
-        # Redemption Frequency
-        redemption_range = st.slider(
-            "Redemption Frequency",
-            min_value=0.0,
-            max_value=1.0,
-            value=(0.0, 1.0),
-            step=0.01,
-            format="%.2f"
-        )
+            # Customer Segments
+            segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
+            selected_segments = st.multiselect(
+                "Customer Segments",
+                options=segment_options,
+                default=segment_options
+            )
 
-        # Distance Variability
-        distance_var_range = st.slider(
-            "Distance Variability",
-            min_value=float(df_full['distance_variability'].min()),
-            max_value=float(df_full['distance_variability'].max()),
-            value=(float(df_full['distance_variability'].min()), float(df_full['distance_variability'].max())),
-            step=0.01
-        )
+            # Redemption Frequency
+            redemption_range = st.slider(
+                "Redemption Frequency",
+                min_value=0.0,
+                max_value=1.0,
+                value=(0.0, 1.0),
+                step=0.01,
+                format="%.2f"
+            )
 
-        # Education Level
-        education_options = sorted([e for e in df_full['Education'].unique() if e != 'Unknown'])
-        selected_education = st.multiselect(
-            "Education Level",
-            options=education_options,
-            default=education_options
-        )
+            # Flight Regularity
+            flight_reg_range = st.slider(
+                "Flight Regularity",
+                min_value=float(df_full['flight_regularity'].min()),
+                max_value=float(df_full['flight_regularity'].max()),
+                value=(float(df_full['flight_regularity'].min()), float(df_full['flight_regularity'].max())),
+                step=0.01
+            )
 
-        # Income Range
-        income_range = st.slider(
-            "Income Range",
-            min_value=0,
-            max_value=int(df_full['Income'].max()),
-            value=(0, int(df_full['Income'].max())),
-            format="$%d"
-        )
+            # Companion Flight Ratio
+            companion_range = st.slider(
+                "Companion Flight Ratio",
+                min_value=float(df_full['companion_flight_ratio'].min()),
+                max_value=float(df_full['companion_flight_ratio'].max()),
+                value=(float(df_full['companion_flight_ratio'].min()), float(df_full['companion_flight_ratio'].max())),
+                step=0.01
+            )
 
-        # Province
-        province_options = sorted(df_full['Province or State'].unique().tolist())
-        selected_provinces = st.multiselect(
-            "Province",
-            options=province_options,
-            default=province_options
-        )
+            # Distance Variability
+            distance_var_range = st.slider(
+                "Distance Variability",
+                min_value=float(df_full['distance_variability'].min()),
+                max_value=float(df_full['distance_variability'].max()),
+                value=(float(df_full['distance_variability'].min()), float(df_full['distance_variability'].max())),
+                step=0.01
+            )
+
+            # Average Distance per Flight
+            avg_distance_range = st.slider(
+                "Avg Distance per Flight",
+                min_value=float(df_full['avg_distance_per_flight'].min()),
+                max_value=float(df_full['avg_distance_per_flight'].max()),
+                value=(float(df_full['avg_distance_per_flight'].min()), float(df_full['avg_distance_per_flight'].max())),
+                step=10.0
+            )
+
+            # Peak Season Sin
+            peak_season_range = st.slider(
+                "Peak Season (Sin)",
+                min_value=float(df_full['peak_season_sin'].min()),
+                max_value=float(df_full['peak_season_sin'].max()),
+                value=(float(df_full['peak_season_sin'].min()), float(df_full['peak_season_sin'].max())),
+                step=0.01
+            )
+
+        # --- DEMOGRAPHIC FILTERS ---
+        with st.expander("Demographic Filters", expanded=False):
+            # Reset button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("Reset All", key="reset_demographic"):
+                    st.rerun()
+
+            # Province
+            province_options = sorted([p for p in df_full['Province or State'].unique() if pd.notna(p)])
+            selected_provinces = st.multiselect(
+                "Province",
+                options=province_options,
+                default=province_options
+            )
+
+            # City
+            city_options = sorted([c for c in df_full['City'].unique() if pd.notna(c) and c != 'Unknown'])
+            selected_cities = st.multiselect(
+                "City",
+                options=city_options,
+                default=city_options
+            )
+
+            # FSA
+            fsa_options = sorted([f for f in df_full['FSA'].unique() if pd.notna(f)])
+            selected_fsa = st.multiselect(
+                "FSA (Forward Sortation Area)",
+                options=fsa_options,
+                default=fsa_options
+            )
+
+            # Gender
+            gender_options = sorted([g for g in df_full['Gender'].unique() if pd.notna(g)])
+            selected_gender = st.multiselect(
+                "Gender",
+                options=gender_options,
+                default=gender_options
+            )
+
+            # Education Level
+            education_options = sorted([e for e in df_full['Education'].unique() if pd.notna(e) and e != 'Unknown'])
+            selected_education = st.multiselect(
+                "Education Level",
+                options=education_options,
+                default=education_options
+            )
+
+            # Location Code
+            location_options = sorted([l for l in df_full['Location Code'].unique() if pd.notna(l)])
+            selected_location = st.multiselect(
+                "Location Code",
+                options=location_options,
+                default=location_options
+            )
+
+        # --- VALUE-BASED FILTERS ---
+        with st.expander("Value-Based Filters", expanded=False):
+            # Reset button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("Reset All", key="reset_value"):
+                    st.rerun()
+
+            # Focus Group Selection
+            focus_group_options = []
+            if 'fm_segment_fg1' in df_full.columns:
+                focus_group_options.append('Focus Group 1: Loyalty Members | Active')
+            if 'fm_segment_fg2' in df_full.columns:
+                focus_group_options.append('Focus Group 2: Ex-Loyalty Members | Active')
+
+            selected_focus_groups = st.multiselect(
+                "Focus Groups",
+                options=focus_group_options,
+                default=focus_group_options
+            )
+
+            # Income Range
+            income_range = st.slider(
+                "Income Range",
+                min_value=0,
+                max_value=int(df_full['Income'].max()),
+                value=(0, int(df_full['Income'].max())),
+                format="$%d"
+            )
+
+            # Frequency Range
+            freq_range = st.slider(
+                "Frequency (Flights per Active Month)",
+                min_value=float(df_full['Frequency'].min()),
+                max_value=float(df_full['Frequency'].max()),
+                value=(float(df_full['Frequency'].min()), float(df_full['Frequency'].max())),
+                step=0.1
+            )
+
+            # Monetary Range
+            monetary_range = st.slider(
+                "Monetary (Distance per Active Month)",
+                min_value=float(df_full['Monetary'].min()),
+                max_value=float(df_full['Monetary'].max()),
+                value=(float(df_full['Monetary'].min()), float(df_full['Monetary'].max())),
+                step=10.0
+            )
 
         st.divider()
 
@@ -625,17 +814,44 @@ def main():
     df_filtered = df_filtered[
         (df_filtered['redemption_frequency'] >= redemption_range[0]) &
         (df_filtered['redemption_frequency'] <= redemption_range[1]) &
+        (df_filtered['flight_regularity'] >= flight_reg_range[0]) &
+        (df_filtered['flight_regularity'] <= flight_reg_range[1]) &
+        (df_filtered['companion_flight_ratio'] >= companion_range[0]) &
+        (df_filtered['companion_flight_ratio'] <= companion_range[1]) &
         (df_filtered['distance_variability'] >= distance_var_range[0]) &
-        (df_filtered['distance_variability'] <= distance_var_range[1])
+        (df_filtered['distance_variability'] <= distance_var_range[1]) &
+        (df_filtered['avg_distance_per_flight'] >= avg_distance_range[0]) &
+        (df_filtered['avg_distance_per_flight'] <= avg_distance_range[1]) &
+        (df_filtered['peak_season_sin'] >= peak_season_range[0]) &
+        (df_filtered['peak_season_sin'] <= peak_season_range[1])
     ]
 
     # Apply demographic filters
+    df_filtered = df_filtered[df_filtered['Province or State'].isin(selected_provinces)]
+    df_filtered = df_filtered[df_filtered['City'].isin(selected_cities)]
+    df_filtered = df_filtered[df_filtered['FSA'].isin(selected_fsa)]
+    df_filtered = df_filtered[df_filtered['Gender'].isin(selected_gender)]
     df_filtered = df_filtered[df_filtered['Education'].isin(selected_education)]
+    df_filtered = df_filtered[df_filtered['Location Code'].isin(selected_location)]
+
+    # Apply value-based filters
     df_filtered = df_filtered[
         (df_filtered['Income'] >= income_range[0]) &
-        (df_filtered['Income'] <= income_range[1])
+        (df_filtered['Income'] <= income_range[1]) &
+        (df_filtered['Frequency'] >= freq_range[0]) &
+        (df_filtered['Frequency'] <= freq_range[1]) &
+        (df_filtered['Monetary'] >= monetary_range[0]) &
+        (df_filtered['Monetary'] <= monetary_range[1])
     ]
-    df_filtered = df_filtered[df_filtered['Province or State'].isin(selected_provinces)]
+
+    # Apply focus group filter
+    if selected_focus_groups:
+        focus_group_mask = pd.Series([False] * len(df_filtered), index=df_filtered.index)
+        if 'Focus Group 1: Loyalty Members | Active' in selected_focus_groups:
+            focus_group_mask |= df_filtered['fm_segment_fg1'].notna()
+        if 'Focus Group 2: Ex-Loyalty Members | Active' in selected_focus_groups:
+            focus_group_mask |= df_filtered['fm_segment_fg2'].notna()
+        df_filtered = df_filtered[focus_group_mask]
 
     # ==================== MAIN HEADER ====================
     st.markdown("""
@@ -696,7 +912,18 @@ def main():
 
     st.markdown("---")
 
-    # ==================== ROW 2: COMPARATIVE ANALYSIS ====================
+    # ==================== ROW 2: FM MATRIX SEGMENTATION ====================
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
+
+    if len(df_filtered) > 0:
+        fig_fm = create_fm_matrix_combined(df_filtered)
+        st.plotly_chart(fig_fm, use_container_width=True, config={'displaylogo': False})
+    else:
+        st.warning("No customers match the current filters. Please adjust your selection.")
+
+    st.markdown("---")
+
+    # ==================== ROW 3: COMPARATIVE ANALYSIS ====================
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>Comparative Analysis: Selected vs Population</h3></div>", unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
@@ -716,47 +943,6 @@ def main():
             )
             fig_demo = create_demographic_split(df_filtered, demo_attribute)
             st.plotly_chart(fig_demo, use_container_width=True, config={'displayModeBar': False})
-
-    st.markdown("---")
-
-    # ==================== ROW 3: FM MATRIX SEGMENTATION ====================
-    st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
-
-    if len(df_filtered) > 0:
-        # Check if we have the required columns
-        has_fg1 = 'fm_segment_fg1' in df_filtered.columns and 'fm_tier_fg1' in df_filtered.columns
-        has_fg2 = 'fm_segment_fg2' in df_filtered.columns and 'fm_tier_fg2' in df_filtered.columns
-
-        if has_fg1 or has_fg2:
-            fm_col1, fm_col2 = st.columns(2)
-
-            with fm_col1:
-                if has_fg1:
-                    # Filter for Focus Group 1 customers
-                    fg1_data = df_filtered[df_filtered['fm_segment_fg1'].notna()]
-                    if len(fg1_data) > 0:
-                        fig_fm1 = create_fm_matrix(fg1_data, 'fm_segment_fg1', 'fm_tier_fg1',
-                                                   'Loyalty Members | Active')
-                        st.plotly_chart(fig_fm1, use_container_width=True, config={'displayModeBar': False})
-                    else:
-                        st.info("No Focus Group 1 customers in selection")
-                else:
-                    st.info("Focus Group 1 data not available")
-
-            with fm_col2:
-                if has_fg2:
-                    # Filter for Focus Group 2 customers
-                    fg2_data = df_filtered[df_filtered['fm_segment_fg2'].notna()]
-                    if len(fg2_data) > 0:
-                        fig_fm2 = create_fm_matrix(fg2_data, 'fm_segment_fg2', 'fm_tier_fg2',
-                                                   'Ex-Loyalty Members | Active')
-                        st.plotly_chart(fig_fm2, use_container_width=True, config={'displayModeBar': False})
-                    else:
-                        st.info("No Focus Group 2 customers in selection")
-                else:
-                    st.info("Focus Group 2 data not available")
-        else:
-            st.warning("FM segmentation data not available in dataset")
 
     st.markdown("---")
 
