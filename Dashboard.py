@@ -21,41 +21,228 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS with Green Palette ---
+# --- Custom CSS with Green Palette (Light Theme) ---
 st.markdown("""
 <style>
     /* Main background */
     .stApp {
-        background-color: #0a0e1a;
+        background-color: #ffffff;
     }
 
-    /* Sidebar styling */
+    /* Sidebar styling - clean white background */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 100%);
-        border-right: 2px solid #10b981;
+        background-color: #ffffff;
+        border-right: 1px solid #e5e7eb;
+        width: 400px !important;
+        min-width: 400px !important;
     }
 
-    /* Make multiselect and slider widgets green */
+    [data-testid="stSidebar"] > div:first-child {
+        width: 400px !important;
+    }
+
+    /* Sidebar text and labels */
+    [data-testid="stSidebar"] label {
+        color: #374151 !important;
+        font-weight: 500 !important;
+        font-size: 16px !important;
+    }
+
+    [data-testid="stSidebar"] p {
+        color: #6b7280 !important;
+        font-size: 14px !important;
+    }
+
+    /* Sidebar general text */
+    [data-testid="stSidebar"] {
+        font-size: 15px !important;
+    }
+
+    /* Sidebar multiselect text */
+    [data-testid="stSidebar"] [data-baseweb="select"] span {
+        font-size: 15px !important;
+    }
+
+    /* Sidebar input text */
+    [data-testid="stSidebar"] input {
+        font-size: 15px !important;
+    }
+
+    /* Sidebar expander */
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        color: #10b981 !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        background-color: #f9fafb !important;
+        padding: 12px !important;
+        border-radius: 8px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stExpander"] > div:last-child {
+        background-color: #ffffff !important;
+        padding: 15px !important;
+    }
+
+    /* Sidebar headers h2 */
+    [data-testid="stSidebar"] h2 {
+        color: #10b981 !important;
+        font-weight: 700 !important;
+        font-size: 22px !important;
+    }
+
+    /* Multiselect and input styling */
+    [data-testid="stSidebar"] [data-baseweb="select"] {
+        background-color: #ffffff !important;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        border-color: #d1d5db !important;
+        color: #374151 !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background-color: #ffffff !important;
+        border-color: #d1d5db !important;
+        color: #374151 !important;
+    }
+
+    /* Force multiselect container to stack vertically with dropdown on top */
+    .stMultiSelect [data-baseweb="select"] > div:first-child {
+        flex-direction: column-reverse !important;
+        align-items: stretch !important;
+    }
+
+    /* Style multiselect tags to be full width */
     .stMultiSelect [data-baseweb="tag"] {
-        background-color: #10b981 !important;
+        background-color: transparent !important;
+        border: 1px solid #d1d5db !important;
+        color: #374151 !important;
+        padding: 4px 8px !important;
+        margin: 2px 0 !important;
+        font-size: 13px !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
     }
 
+    /* X button on tags */
+    .stMultiSelect [data-baseweb="tag"] span[role="presentation"] {
+        color: #6b7280 !important;
+    }
+
+    .stMultiSelect [data-baseweb="tag"]:hover {
+        background-color: #f3f4f6 !important;
+    }
+
+    /* Slider thumb (handle) - green */
     .stSlider [data-baseweb="slider"] [role="slider"] {
         background-color: #10b981 !important;
     }
 
     .stSlider [data-testid="stThumbValue"] {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+
+    /* Slider range values (min/max numbers) - black */
+    [data-testid="stSidebar"] .stSlider label {
+        color: #000000 !important;
+    }
+
+    [data-testid="stSidebar"] .stSlider p {
+        color: #000000 !important;
+    }
+
+    [data-testid="stSidebar"] .stSlider div {
+        color: #000000 !important;
+    }
+
+    [data-testid="stSidebar"] .stSlider span {
+        color: #000000 !important;
+    }
+
+    /* Remove all backgrounds from slider container */
+    .stSlider > div {
+        background-color: transparent !important;
+    }
+
+    .stSlider > div > div {
+        background-color: transparent !important;
+    }
+
+    /* The actual track/rail - make it black, not red */
+    div[data-baseweb="slider"] div[data-testid="stTickBar"] > div {
+        background-color: #000000 !important;
+    }
+
+    div[data-baseweb="slider"] > div > div > div {
+        background-color: #000000 !important;
+    }
+
+    /* Target the inner track element specifically */
+    [data-baseweb="slider"] [role="presentation"] {
+        background-color: #000000 !important;
+    }
+
+    /* Override any red color */
+    .stSlider * {
+        background-color: transparent !important;
+    }
+
+    /* But keep the track black */
+    .stSlider [data-baseweb="slider"] > div > div > div {
+        background-color: #000000 !important;
+    }
+
+    /* And the thumb green */
+    .stSlider [role="slider"] {
+        background-color: #10b981 !important;
+    }
+
+    /* Button styling */
+    [data-testid="stSidebar"] button[kind="secondary"] {
+        background-color: #ffffff !important;
         color: #10b981 !important;
+        border: 1px solid #10b981 !important;
+        font-weight: 500 !important;
+    }
+
+    [data-testid="stSidebar"] button[kind="secondary"]:hover {
+        background-color: #f0fdf4 !important;
+        border-color: #059669 !important;
+        color: #059669 !important;
+    }
+
+    /* Primary button for Select All */
+    [data-testid="stSidebar"] button[kind="primary"] {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+    }
+
+    [data-testid="stSidebar"] button[kind="primary"]:hover {
+        background-color: #059669 !important;
     }
 
     /* Headers */
     h1 {
-        color: #10b981 !important;
+        color: #047857 !important;
         font-weight: 700 !important;
     }
 
     h2, h3, h4 {
-        color: #d1fae5 !important;
+        color: #065f46 !important;
     }
 
     /* Metrics cards */
@@ -66,38 +253,29 @@ st.markdown("""
     }
 
     [data-testid="stMetricLabel"] {
-        color: #6ee7b7 !important;
+        color: #047857 !important;
         font-size: 0.9rem !important;
         text-transform: uppercase !important;
         letter-spacing: 1px !important;
     }
 
     [data-testid="stMetricDelta"] {
-        color: #34d399 !important;
+        color: #059669 !important;
     }
 
     /* Section headers */
     .section-header {
-        background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+        background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
         padding: 12px 20px;
         border-radius: 8px;
         border-left: 4px solid #10b981;
         margin: 20px 0 10px 0;
     }
 
-    /* Filter section */
-    .filter-box {
-        background-color: #1a1f2e;
-        border: 1px solid #065f46;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-
     /* Data source footer */
     .data-source {
-        background-color: #065f46;
-        color: #d1fae5;
+        background-color: #d1fae5;
+        color: #065f46;
         padding: 10px;
         border-radius: 6px;
         text-align: center;
@@ -121,7 +299,7 @@ st.markdown("""
 CLUSTER_CONFIG = {
     0: {
         'name': 'Disengaged Solo',
-        'color': '#6b7280',  # Gray - Low engagement
+        'color': '#ef4444',  # Red - Low engagement
         'desc': 'Low engagement, infrequent redemption, solo travelers.'
     },
     1: {
@@ -171,17 +349,11 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
 
     fig = go.Figure()
 
-    # Store cluster counts for annotation
-    cluster_counts = {}
-
     for cluster_id in sorted(df['Behavioral_Cluster'].unique()):
         cluster_df = df[df['Behavioral_Cluster'] == cluster_id]
         cluster_info = CLUSTER_CONFIG.get(cluster_id, {})
         cluster_name = cluster_info.get('name', f'Cluster {cluster_id}')
         cluster_color = cluster_info.get('color', '#6b7280')
-
-        # Store count
-        cluster_counts[cluster_name] = len(cluster_df)
 
         fig.add_trace(go.Scatter3d(
             x=cluster_df['pca_1'],
@@ -219,64 +391,44 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         scene=dict(
             xaxis=dict(
-                title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#10b981', size=12)),
-                backgroundcolor='#0a0e1a',
-                gridcolor='#065f46',
+                title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#047857', size=12)),
+                backgroundcolor='#f9fafb',
+                gridcolor='#d1fae5',
                 showbackground=True,
                 range=axis_range
             ),
             yaxis=dict(
-                title=dict(text="<b>PC2: Travel Pattern Axis</b>", font=dict(color='#10b981', size=12)),
-                backgroundcolor='#0a0e1a',
-                gridcolor='#065f46',
+                title=dict(text="<b>PC2: Travel Pattern Axis</b>", font=dict(color='#047857', size=12)),
+                backgroundcolor='#f9fafb',
+                gridcolor='#d1fae5',
                 showbackground=True,
                 range=axis_range
             ),
             zaxis=dict(
-                title=dict(text="<b>PC3: Secondary Pattern Axis</b>", font=dict(color='#10b981', size=12)),
-                backgroundcolor='#0a0e1a',
-                gridcolor='#065f46',
+                title=dict(text="<b>PC3: Secondary Pattern Axis</b>", font=dict(color='#047857', size=12)),
+                backgroundcolor='#f9fafb',
+                gridcolor='#d1fae5',
                 showbackground=True,
                 range=axis_range
             ),
-            bgcolor='#0a0e1a',
+            bgcolor='#ffffff',
             aspectmode='cube'
         ),
-        paper_bgcolor='#0a0e1a',
-        plot_bgcolor='#0a0e1a',
-        font=dict(color='#d1fae5'),
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#ffffff',
+        font=dict(color='#1f2937'),
         legend=dict(
-            bgcolor='rgba(6, 95, 70, 0.8)',
-            bordercolor='#10b981',
-            borderwidth=2,
-            font=dict(color='#d1fae5', size=11),
-            title=dict(text="<b>Customer Segments</b>", font=dict(size=12, color='#10b981')),
+            bgcolor='rgba(255, 255, 255, 0.9)',
+            bordercolor='#d1d5db',
+            borderwidth=1,
+            font=dict(color='#1f2937', size=13),
+            title=dict(text="<b>Customer Segments</b>", font=dict(size=14, color='#1f2937')),
             x=1.0,
             y=0.9
         ),
         margin=dict(l=0, r=0, t=0, b=100),
         height=600,
         scene_camera=dict(eye=dict(x=1.5, y=1.5, z=1.3))
-    )
-
-    # Add cluster count annotation box below legend
-    count_text = "<b>Cluster Counts:</b><br>"
-    for cluster_name in sorted(cluster_counts.keys()):
-        count_text += f"• {cluster_name}: {cluster_counts[cluster_name]:,}<br>"
-    count_text += f"<br><b>Total: {len(df):,}</b>"
-
-    fig.add_annotation(
-        text=count_text,
-        xref="paper", yref="paper",
-        x=1.0, y=-0.1,
-        xanchor="right", yanchor="top",
-        showarrow=False,
-        bgcolor='rgba(6, 95, 70, 0.8)',
-        bordercolor='#10b981',
-        borderwidth=2,
-        borderpad=10,
-        font=dict(color='#d1fae5', size=10),
-        align='left'
     )
 
     return fig
@@ -336,28 +488,28 @@ def create_persona_radar(df: pd.DataFrame, population_df: pd.DataFrame) -> go.Fi
 
     fig.update_layout(
         polar=dict(
-            bgcolor='#1a1f2e',
+            bgcolor='#f9fafb',
             radialaxis=dict(
                 visible=True,
                 range=[0, 1],
-                gridcolor='#065f46',
-                tickfont=dict(color='#6ee7b7', size=9),
+                gridcolor='#d1fae5',
+                tickfont=dict(color='#047857', size=9),
                 tickvals=[0, 0.25, 0.5, 0.75, 1],
                 ticktext=['0', '25', '50', '75', '100']
             ),
             angularaxis=dict(
-                gridcolor='#065f46',
-                tickfont=dict(color='#d1fae5', size=10)
+                gridcolor='#d1fae5',
+                tickfont=dict(color='#065f46', size=10)
             )
         ),
-        paper_bgcolor='#0a0e1a',
-        font=dict(color='#d1fae5'),
+        paper_bgcolor='#ffffff',
+        font=dict(color='#1f2937'),
         showlegend=True,
         legend=dict(
-            bgcolor='rgba(6, 95, 70, 0.6)',
-            bordercolor='#10b981',
+            bgcolor='rgba(255, 255, 255, 0.9)',
+            bordercolor='#d1d5db',
             borderwidth=1,
-            font=dict(color='#d1fae5')
+            font=dict(color='#1f2937')
         ),
         margin=dict(l=40, r=40, t=40, b=40),
         height=400
@@ -389,26 +541,26 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
 
     fig.update_layout(
         barmode='stack',
-        paper_bgcolor='#0a0e1a',
-        plot_bgcolor='#1a1f2e',
-        font=dict(color='#d1fae5'),
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#f9fafb',
+        font=dict(color='#1f2937'),
         xaxis=dict(
-            title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#10b981')),
-            gridcolor='#065f46',
-            tickfont=dict(color='#6ee7b7'),
+            title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#047857')),
+            gridcolor='#d1fae5',
+            tickfont=dict(color='#065f46'),
             range=[0, 100]
         ),
         yaxis=dict(
-            title=dict(text='<b>Customer Segment</b>', font=dict(color='#10b981')),
-            tickfont=dict(color='#d1fae5'),
+            title=dict(text='<b>Customer Segment</b>', font=dict(color='#047857')),
+            tickfont=dict(color='#1f2937'),
             showgrid=False
         ),
         legend=dict(
-            bgcolor='rgba(6, 95, 70, 0.6)',
-            bordercolor='#10b981',
+            bgcolor='rgba(255, 255, 255, 0.9)',
+            bordercolor='#d1d5db',
             borderwidth=1,
-            font=dict(color='#d1fae5'),
-            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#10b981'))
+            font=dict(color='#1f2937'),
+            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#1f2937'))
         ),
         margin=dict(l=10, r=10, t=20, b=40),
         height=400
@@ -436,9 +588,9 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
         fig = go.Figure()
         fig.update_layout(
             title="FM Matrix data not available",
-            paper_bgcolor='#0a0e1a',
-            plot_bgcolor='#1a1f2e',
-            font=dict(color='#d1fae5')
+            paper_bgcolor='#ffffff',
+            plot_bgcolor='#f9fafb',
+            font=dict(color='#1f2937')
         )
         return fig
 
@@ -543,59 +695,59 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     # Add quadrant labels as annotations
     fig.add_annotation(x=freq_median * 1.4, y=mon_median * 1.4,
         text="Champions", showarrow=False,
-        font=dict(size=14, color='#d1fae5', family="Arial Black"),
-        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+        font=dict(size=14, color='#065f46', family="Arial Black"),
+        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
 
     fig.add_annotation(x=freq_median * 0.3, y=mon_median * 1.4,
         text="Premium<br>Occasional", showarrow=False,
-        font=dict(size=14, color='#d1fae5', family="Arial Black"),
-        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+        font=dict(size=14, color='#065f46', family="Arial Black"),
+        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
 
     fig.add_annotation(x=freq_median * 1.4, y=mon_median * 0.3,
         text="Frequent<br>Flyer", showarrow=False,
-        font=dict(size=14, color='#d1fae5', family="Arial Black"),
-        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+        font=dict(size=14, color='#065f46', family="Arial Black"),
+        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
 
     fig.add_annotation(x=freq_median * 0.3, y=mon_median * 0.3,
         text="At Risk", showarrow=False,
-        font=dict(size=14, color='#d1fae5', family="Arial Black"),
-        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+        font=dict(size=14, color='#065f46', family="Arial Black"),
+        bgcolor='rgba(209, 250, 229, 0.8)', borderpad=4)
 
     # Add Elite label
     elite_center_x = (freq_p90 + max_freq) / 2
     elite_center_y = (mon_p90 + max_mon) / 2
     fig.add_annotation(x=elite_center_x, y=elite_center_y,
         text="Elite", showarrow=False,
-        font=dict(size=13, color='#d1fae5', family="Arial Black"),
-        bgcolor='rgba(139, 92, 246, 0.3)', borderpad=4)
+        font=dict(size=13, color='#065f46', family="Arial Black"),
+        bgcolor='rgba(139, 92, 246, 0.4)', borderpad=4)
 
     fig.update_layout(
         title=dict(
             text=f'FM Matrix: Value-Based Segmentation<br><sub>n={len(df_with_fm):,} customers</sub>',
-            font=dict(color='#10b981', size=14)
+            font=dict(color='#047857', size=14)
         ),
         xaxis=dict(
-            title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#10b981')),
-            gridcolor='#065f46',
-            tickfont=dict(color='#6ee7b7'),
+            title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#047857')),
+            gridcolor='#d1fae5',
+            tickfont=dict(color='#065f46'),
             showgrid=True,
             zeroline=False
         ),
         yaxis=dict(
-            title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#10b981')),
-            gridcolor='#065f46',
-            tickfont=dict(color='#6ee7b7'),
+            title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#047857')),
+            gridcolor='#d1fae5',
+            tickfont=dict(color='#065f46'),
             showgrid=True,
             zeroline=False
         ),
-        paper_bgcolor='#0a0e1a',
-        plot_bgcolor='#1a1f2e',
-        font=dict(color='#d1fae5'),
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#f9fafb',
+        font=dict(color='#1f2937'),
         legend=dict(
-            bgcolor='rgba(6, 95, 70, 0.6)',
-            bordercolor='#10b981',
+            bgcolor='rgba(255, 255, 255, 0.9)',
+            bordercolor='#d1d5db',
             borderwidth=1,
-            font=dict(color='#d1fae5', size=9)
+            font=dict(color='#1f2937', size=9)
         ),
         hovermode='closest',
         height=500
@@ -620,11 +772,6 @@ def main():
 
         # --- BEHAVIORAL FILTERS ---
         with st.expander("Behavioral Filters", expanded=True):
-            # Select All button
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                if st.button("Reset All", key="reset_behavioral"):
-                    st.rerun()
 
             # Customer Segments
             segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
@@ -691,12 +838,6 @@ def main():
 
         # --- DEMOGRAPHIC FILTERS ---
         with st.expander("Demographic Filters", expanded=False):
-            # Reset button
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                if st.button("Reset All", key="reset_demographic"):
-                    st.rerun()
-
             # Province
             province_options = sorted([p for p in df_full['Province or State'].unique() if pd.notna(p)])
             selected_provinces = st.multiselect(
@@ -747,12 +888,6 @@ def main():
 
         # --- VALUE-BASED FILTERS ---
         with st.expander("Value-Based Filters", expanded=False):
-            # Reset button
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                if st.button("Reset All", key="reset_value"):
-                    st.rerun()
-
             # Focus Group Selection
             focus_group_options = []
             if 'fm_segment_fg1' in df_full.columns:
@@ -848,47 +983,9 @@ def main():
     st.markdown("""
     <div style='text-align: center; padding: 20px 0;'>
         <h1 style='font-size: 2.5rem; margin: 0;'>AIAI Customer Segmentation Strategy</h1>
-        <p style='color: #6ee7b7; font-size: 1.1rem; margin-top: 10px;'>Behavioral Clustering & Value Analysis | Group 80</p>
+        <p style='color: #059669; font-size: 1.1rem; margin-top: 10px;'>Behavioral Clustering & Value Analysis | Group 80</p>
     </div>
     """, unsafe_allow_html=True)
-
-    # Top-Level KPIs
-    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-
-    with kpi_col1:
-        delta_pct = (len(df_filtered) / len(df_full) * 100) - 100
-        st.metric(
-            "Selected Customers",
-            f"{len(df_filtered):,}",
-            delta=f"{delta_pct:.1f}% of base" if delta_pct < 0 else f"{len(df_filtered)/len(df_full)*100:.1f}% of base"
-        )
-
-    with kpi_col2:
-        avg_redemption = df_filtered['redemption_frequency'].mean()
-        pop_redemption = df_full['redemption_frequency'].mean()
-        delta_redemption = ((avg_redemption - pop_redemption) / pop_redemption * 100) if pop_redemption > 0 else 0
-        st.metric(
-            "Avg. Redemption Rate",
-            f"{avg_redemption:.1%}",
-            delta=f"{delta_redemption:+.1f}% vs pop"
-        )
-
-    with kpi_col3:
-        avg_distance = df_filtered['avg_distance_per_flight'].mean()
-        pop_distance = df_full['avg_distance_per_flight'].mean()
-        delta_distance = ((avg_distance - pop_distance) / pop_distance * 100) if pop_distance > 0 else 0
-        st.metric(
-            "Avg. Distance Flown",
-            f"{avg_distance:,.0f} km",
-            delta=f"{delta_distance:+.1f}% vs pop"
-        )
-
-    with kpi_col4:
-        avg_clv = df_filtered['Customer Lifetime Value'].mean()
-        st.metric(
-            "Avg. CLV",
-            f"${avg_clv:,.0f}"
-        )
 
     st.markdown("---")
 
@@ -897,7 +994,7 @@ def main():
 
     if len(df_filtered) > 0:
         fig_3d = create_3d_universe(df_filtered)
-        st.plotly_chart(fig_3d, use_container_width=True, config={'displaylogo': False})
+        st.plotly_chart(fig_3d, width='stretch', config={'displaylogo': False})
     else:
         st.warning("No customers match the current filters. Please adjust your selection.")
 
@@ -908,7 +1005,7 @@ def main():
 
     if len(df_filtered) > 0:
         fig_fm = create_fm_matrix_combined(df_filtered)
-        st.plotly_chart(fig_fm, use_container_width=True, config={'displaylogo': False})
+        st.plotly_chart(fig_fm, width='stretch', config={'displaylogo': False})
     else:
         st.warning("No customers match the current filters. Please adjust your selection.")
 
@@ -923,7 +1020,7 @@ def main():
         with persona_col1:
             st.markdown("#### Behavioral Signature")
             fig_radar = create_persona_radar(df_filtered, df_full)
-            st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
 
         with persona_col2:
             st.markdown("#### Demographic Composition")
@@ -933,7 +1030,7 @@ def main():
                 key='demo_split'
             )
             fig_demo = create_demographic_split(df_filtered, demo_attribute)
-            st.plotly_chart(fig_demo, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_demo, width='stretch', config={'displayModeBar': False})
 
     st.markdown("---")
 
@@ -947,7 +1044,7 @@ def main():
                        'redemption_frequency', 'Frequency', 'Monetary', 'Customer Lifetime Value']
         st.dataframe(
             df_filtered[preview_cols].head(10),
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
 
@@ -960,16 +1057,16 @@ def main():
                 data=csv,
                 file_name=f"aiai_customers_{len(df_filtered)}.csv",
                 mime="text/csv",
-                use_container_width=True,
+                width='stretch',
                 type="primary"
             )
 
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; color: #6ee7b7; padding: 20px 0;'>
+    <div style='text-align: center; color: #047857; padding: 20px 0;'>
         <p style='margin: 0;'><strong>AIAI Strategic Explorer</strong> | Amazing International Airlines Inc.</p>
-        <p style='font-size: 0.8rem; margin-top: 5px; color: #10b981;'>Powered by Behavioral Clustering (SOM + K-Means) | PCA Visualization | Group 80 Analytics</p>
+        <p style='font-size: 0.8rem; margin-top: 5px; color: #059669;'>Powered by Behavioral Clustering (SOM + K-Means) | PCA Visualization | Group 80 Analytics</p>
     </div>
     """, unsafe_allow_html=True)
 
