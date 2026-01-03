@@ -1,13 +1,10 @@
 """
-AeroAnalytics - AIAI Loyalty Segmentation Dashboard
-Streamlit Dashboard für die echten AIAI Clustering-Ergebnisse
+The AIAI Strategic Explorer - Deliverable 2
+Professional Customer Segmentation Dashboard for Executive Stakeholders
 
-Features:
-- Interaktive 3D PCA-Visualisierung der Cluster
-- Echtzeit-Filterung nach Features und Clustern
-- Cluster-Analysen: Radar-Charts, Populationsgrößen, Feature-Verteilungen
-- Kunden-Detail-Ansicht
-- Daten-Export
+Architecture:
+- Left Sidebar: Targeting Parameters (Behavioral & Demographic Filters)
+- Main Area: Strategic Visualizations (3D Universe, Persona Profiling, Export)
 """
 
 import streamlit as st
@@ -19,441 +16,591 @@ from plotly.subplots import make_subplots
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="AeroAnalytics - AIAI Segmentation",
-    page_icon="✈️",
+    page_title="AIAI Strategic Explorer",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS for dark theme styling ---
+# --- Custom CSS with Green Palette ---
 st.markdown("""
 <style>
     /* Main background */
     .stApp {
-        background-color: #0d1117;
+        background-color: #0a0e1a;
     }
-    
+
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background-color: #161b22;
-        border-right: 1px solid #30363d;
+        background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 100%);
+        border-right: 2px solid #10b981;
     }
-    
+
+    /* Make multiselect and slider widgets green */
+    .stMultiSelect [data-baseweb="tag"] {
+        background-color: #10b981 !important;
+    }
+
+    .stSlider [data-baseweb="slider"] [role="slider"] {
+        background-color: #10b981 !important;
+    }
+
+    .stSlider [data-testid="stThumbValue"] {
+        color: #10b981 !important;
+    }
+
     /* Headers */
-    h1, h2, h3, h4 {
-        color: #c9d1d9 !important;
+    h1 {
+        color: #10b981 !important;
+        font-weight: 700 !important;
     }
-    
+
+    h2, h3, h4 {
+        color: #d1fae5 !important;
+    }
+
     /* Metrics cards */
     [data-testid="stMetricValue"] {
-        color: #58a6ff !important;
-        font-size: 1.5rem !important;
+        color: #10b981 !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
     }
-    
+
     [data-testid="stMetricLabel"] {
-        color: #8b949e !important;
+        color: #6ee7b7 !important;
+        font-size: 0.9rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
     }
-    
-    /* Custom info boxes */
-    .info-box {
-        background-color: #21262d;
-        border: 1px solid #30363d;
+
+    [data-testid="stMetricDelta"] {
+        color: #34d399 !important;
+    }
+
+    /* Section headers */
+    .section-header {
+        background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+        padding: 12px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #10b981;
+        margin: 20px 0 10px 0;
+    }
+
+    /* Filter section */
+    .filter-box {
+        background-color: #1a1f2e;
+        border: 1px solid #065f46;
         border-radius: 8px;
         padding: 15px;
-        margin: 10px 0;
+        margin-bottom: 15px;
     }
-    
+
+    /* Data source footer */
+    .data-source {
+        background-color: #065f46;
+        color: #d1fae5;
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 0.85rem;
+        margin-top: 20px;
+    }
+
+    /* Cluster badge */
     .cluster-badge {
         display: inline-block;
-        padding: 4px 12px;
-        border-radius: 16px;
-        font-size: 0.85rem;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-weight: 600;
+        font-size: 0.85rem;
+        margin: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Cluster Configuration ---
-# Basierend auf den Cluster-Profilen:
-# Cluster 0: Hohe companion_ratio, hohe regularity, hohe redemption → "Social Redeemers"
-# Cluster 1: Hohe distance_variability, solo travelers, niedrige redemption → "Solo Explorers"  
-# Cluster 2: Niedrige Werte überall → "Occasional Travelers"
-
+# --- Behavioral Cluster Configuration (Group 80 Green Palette) ---
 CLUSTER_CONFIG = {
     0: {
-        'name': 'Social Redeemers',
-        'color': '#10b981',  # Emerald/Green
-        'desc': 'Frequent travelers with companions, high point redemption, regular flight patterns.'
+        'name': 'Disengaged Solo',
+        'color': '#6b7280',  # Gray - Low engagement
+        'desc': 'Low engagement, infrequent redemption, solo travelers.'
     },
     1: {
-        'name': 'Solo Explorers',
-        'color': '#3b82f6',  # Blue
-        'desc': 'Variable distance travelers, fly alone, low point redemption, flexible schedules.'
+        'name': 'Business Commuters',
+        'color': '#3b82f6',  # Blue - Regular but transactional
+        'desc': 'Regular solo business travelers, moderate engagement.'
     },
     2: {
-        'name': 'Occasional Travelers',
-        'color': '#ec4899',  # Pink
-        'desc': 'Infrequent flyers, low engagement, stable short-distance patterns.'
+        'name': 'Engaged Loyalists',
+        'color': '#10b981',  # Primary Green - High value
+        'desc': 'Active, consistent, high redemption, loyal base.'
     },
+    3: {
+        'name': 'Family Travelers',
+        'color': '#f59e0b',  # Amber - Companion-based
+        'desc': 'High companion ratio, vacation-oriented patterns.'
+    },
+    4: {
+        'name': 'Explorers',
+        'color': '#8b5cf6',  # Purple - Variable behavior
+        'desc': 'High distance variability, adventurous patterns.'
+    }
 }
-
-# Feature descriptions for tooltips
-FEATURE_INFO = {
-    'distance_variability': 'Variability in flight distances (standardized)',
-    'companion_flight_ratio': 'Ratio of flights taken with companions (standardized)',
-    'flight_regularity': 'Regularity/consistency of flight patterns (standardized)',
-    'redemption_frequency': 'Frequency of loyalty point redemptions (standardized)'
-}
-
-def get_cluster_color(cluster_id: int) -> str:
-    """Get the color for a cluster."""
-    return CLUSTER_CONFIG.get(cluster_id, {}).get('color', '#9ca3af')
-
-def get_cluster_name(cluster_id: int) -> str:
-    """Get the display name for a cluster."""
-    return CLUSTER_CONFIG.get(cluster_id, {}).get('name', f'Cluster {cluster_id}')
 
 # --- Data Loading ---
 @st.cache_data
 def load_data():
-    """Load the AIAI clustering data from CSV files."""
+    """Load and prepare customer segmentation data."""
+    df = pd.read_csv('data/clustering_data/customer_segmentation_profiles.csv')
 
-    
-    # Lade Hauptdaten
-    main_data = pd.read_csv('data/clustering_data/dashboard_main_data.csv')
-    
-    # Lade Cluster-Statistiken
-    cluster_stats = pd.read_csv('data/clustering_data/cluster_statistics.csv')
-    
-    # Lade Cluster-Profile
-    cluster_profiles = pd.read_csv('data/clustering_data/cluster_profiles.csv')
-    
-    # Lade PCA-Metadaten
-    pca_metadata = pd.read_csv('data/clustering_data/pca_metadata.csv')
-    
-    # Füge Cluster-Namen hinzu
-    main_data['cluster_name'] = main_data['Cluster_SOM_KMeans'].map(
-        lambda x: get_cluster_name(x)
-    )
-    
-    return main_data, cluster_stats, cluster_profiles, pca_metadata
+    # Handle missing values
+    df['Income'] = df['Income'].fillna(0)
+    df['Education'] = df['Education'].fillna('Unknown')
+    df['City'] = df['City'].fillna('Unknown')
+    df['Province or State'] = df['Province or State'].fillna('Unknown')
+    df['fm_segment_fg1'] = df['fm_segment_fg1'].fillna('')
 
+    # Add cluster names
+    df['cluster_name'] = df['Behavioral_Cluster'].map(lambda x: CLUSTER_CONFIG.get(x, {}).get('name', f'Cluster {x}'))
+
+    return df
 
 # --- Visualization Functions ---
 
-def create_3d_scatter(df: pd.DataFrame, pca_metadata: pd.DataFrame) -> go.Figure:
-    """Create an interactive 3D PCA scatter plot of customer clusters."""
-    
+def create_3d_universe(df: pd.DataFrame) -> go.Figure:
+    """Create the 3D scatter plot - The Universe visualization."""
+
     fig = go.Figure()
-    
-    # Add scatter points for each cluster
-    for cluster_id in sorted(df['Cluster_SOM_KMeans'].unique()):
-        cluster_df = df[df['Cluster_SOM_KMeans'] == cluster_id]
-        cluster_name = get_cluster_name(cluster_id)
-        cluster_color = get_cluster_color(cluster_id)
-        
+
+    # Store cluster counts for annotation
+    cluster_counts = {}
+
+    for cluster_id in sorted(df['Behavioral_Cluster'].unique()):
+        cluster_df = df[df['Behavioral_Cluster'] == cluster_id]
+        cluster_info = CLUSTER_CONFIG.get(cluster_id, {})
+        cluster_name = cluster_info.get('name', f'Cluster {cluster_id}')
+        cluster_color = cluster_info.get('color', '#6b7280')
+
+        # Store count
+        cluster_counts[cluster_name] = len(cluster_df)
+
         fig.add_trace(go.Scatter3d(
-            x=cluster_df['PC1'],
-            y=cluster_df['PC2'],
-            z=cluster_df['PC3'],
+            x=cluster_df['pca_1'],
+            y=cluster_df['pca_2'],
+            z=cluster_df['pca_3'],
             mode='markers',
-            name=f"{cluster_name} ({len(cluster_df):,})",
+            name=cluster_name,
             marker=dict(
-                size=4,
+                size=5,
                 color=cluster_color,
-                opacity=0.7,
-                line=dict(width=0.5, color='white')
+                opacity=0.6,
+                line=dict(width=0)
             ),
-            text=[f"<b>Customer {row['Loyalty#']}</b><br>"
-                  f"Cluster: {cluster_name}<br>"
-                  f"─────────────<br>"
-                  f"Distance Var: {row['distance_variability']:.2f}<br>"
-                  f"Companion Ratio: {row['companion_flight_ratio']:.2f}<br>"
-                  f"Flight Regularity: {row['flight_regularity']:.2f}<br>"
-                  f"Redemption Freq: {row['redemption_frequency']:.2f}"
+            text=[f"<b>Loyalty# {row['Loyalty#']}</b><br>"
+                  f"<b style='color: {cluster_color};'>{cluster_name}</b><br>"
+                  f"━━━━━━━━━━━━<br>"
+                  f"<b>Behavioral Metrics:</b><br>"
+                  f"• Redemption: {row['redemption_frequency']:.3f}<br>"
+                  f"• Companion Ratio: {row['companion_flight_ratio']:.3f}<br>"
+                  f"• Flight Regularity: {row['flight_regularity']:.3f}<br>"
+                  f"━━━━━━━━━━━━<br>"
+                  f"<b>Demographics:</b><br>"
+                  f"• Income: ${row['Income']:,.0f}<br>"
+                  f"• Education: {row['Education']}<br>"
+                  f"• Province: {row['Province or State']}"
                   for _, row in cluster_df.iterrows()],
-            hoverinfo='text'
+            hoverinfo='text',
+            showlegend=True
         ))
-    
-    # Get variance explained for axis labels
-    var_explained = pca_metadata.set_index('component')['variance_explained'].to_dict()
-    
-    # Update layout
+
+    # Equal axis ranges
+    all_points = pd.concat([df['pca_1'], df['pca_2'], df['pca_3']])
+    axis_range = [all_points.min(), all_points.max()]
+
     fig.update_layout(
         scene=dict(
             xaxis=dict(
-                title=dict(
-                    text=f"PC1 ({var_explained.get('PC1', 0)*100:.1f}% var)",
-                    font=dict(color='#c9d1d9')
-                ),
-                backgroundcolor='#0d1117',
-                gridcolor='#30363d',
+                title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#10b981', size=12)),
+                backgroundcolor='#0a0e1a',
+                gridcolor='#065f46',
                 showbackground=True,
-                zerolinecolor='#30363d',
-                tickfont=dict(color='#8b949e')
+                range=axis_range
             ),
             yaxis=dict(
-                title=dict(
-                    text=f"PC2 ({var_explained.get('PC2', 0)*100:.1f}% var)",
-                    font=dict(color='#c9d1d9')
-                ),
-                backgroundcolor='#0d1117',
-                gridcolor='#30363d',
+                title=dict(text="<b>PC2: Travel Pattern Axis</b>", font=dict(color='#10b981', size=12)),
+                backgroundcolor='#0a0e1a',
+                gridcolor='#065f46',
                 showbackground=True,
-                zerolinecolor='#30363d',
-                tickfont=dict(color='#8b949e')
+                range=axis_range
             ),
             zaxis=dict(
-                title=dict(
-                    text=f"PC3 ({var_explained.get('PC3', 0)*100:.1f}% var)",
-                    font=dict(color='#c9d1d9')
-                ),
-                backgroundcolor='#0d1117',
-                gridcolor='#30363d',
+                title=dict(text="<b>PC3: Secondary Pattern Axis</b>", font=dict(color='#10b981', size=12)),
+                backgroundcolor='#0a0e1a',
+                gridcolor='#065f46',
                 showbackground=True,
-                zerolinecolor='#30363d',
-                tickfont=dict(color='#8b949e')
+                range=axis_range
             ),
-            bgcolor='#0d1117'
+            bgcolor='#0a0e1a',
+            aspectmode='cube'
         ),
-        paper_bgcolor='#0d1117',
-        plot_bgcolor='#0d1117',
-        font=dict(color='#c9d1d9'),
+        paper_bgcolor='#0a0e1a',
+        plot_bgcolor='#0a0e1a',
+        font=dict(color='#d1fae5'),
         legend=dict(
-            bgcolor='rgba(22, 27, 34, 0.9)',
-            bordercolor='#30363d',
-            borderwidth=1,
-            font=dict(color='#c9d1d9'),
-            yanchor='top',
-            y=0.99,
-            xanchor='left',
-            x=0.01
+            bgcolor='rgba(6, 95, 70, 0.8)',
+            bordercolor='#10b981',
+            borderwidth=2,
+            font=dict(color='#d1fae5', size=11),
+            title=dict(text="<b>Customer Segments</b>", font=dict(size=12, color='#10b981')),
+            x=1.0,
+            y=0.9
         ),
-        margin=dict(l=0, r=0, t=30, b=0),
-        height=600
+        margin=dict(l=0, r=0, t=0, b=100),
+        height=600,
+        scene_camera=dict(eye=dict(x=1.5, y=1.5, z=1.3))
     )
-    
-    # Set initial camera position
-    fig.update_layout(
-        scene_camera=dict(
-            eye=dict(x=1.5, y=1.5, z=1.2)
-        )
+
+    # Add cluster count annotation box below legend
+    count_text = "<b>Cluster Counts:</b><br>"
+    for cluster_name in sorted(cluster_counts.keys()):
+        count_text += f"• {cluster_name}: {cluster_counts[cluster_name]:,}<br>"
+    count_text += f"<br><b>Total: {len(df):,}</b>"
+
+    fig.add_annotation(
+        text=count_text,
+        xref="paper", yref="paper",
+        x=1.0, y=-0.1,
+        xanchor="right", yanchor="top",
+        showarrow=False,
+        bgcolor='rgba(6, 95, 70, 0.8)',
+        bordercolor='#10b981',
+        borderwidth=2,
+        borderpad=10,
+        font=dict(color='#d1fae5', size=10),
+        align='left'
     )
-    
+
     return fig
 
 
-def create_radar_chart(cluster_profiles: pd.DataFrame, selected_clusters: list) -> go.Figure:
-    """Create a radar chart showing cluster profiles."""
-    
-    features = ['distance_variability', 'companion_flight_ratio', 
-                'flight_regularity', 'redemption_frequency']
-    feature_labels = ['Distance\nVariability', 'Companion\nRatio', 
-                      'Flight\nRegularity', 'Redemption\nFrequency']
-    
+def create_persona_radar(df: pd.DataFrame, population_df: pd.DataFrame) -> go.Figure:
+    """Create radar chart comparing selection to population baseline."""
+
+    features = ['redemption_frequency', 'companion_flight_ratio', 'flight_regularity', 'distance_variability']
+    labels = ['Redemption<br>Frequency', 'Companion<br>Ratio', 'Flight<br>Regularity', 'Distance<br>Variability']
+
+    # Calculate means
+    selected_means = [df[f].mean() for f in features]
+    population_means = [population_df[f].mean() for f in features]
+
+    # Normalize to 0-1
+    normalized_selected = []
+    normalized_population = []
+
+    for i, f in enumerate(features):
+        min_val = population_df[f].min()
+        max_val = population_df[f].max()
+        range_val = max_val - min_val if max_val > min_val else 1
+
+        norm_sel = (selected_means[i] - min_val) / range_val
+        norm_pop = (population_means[i] - min_val) / range_val
+
+        normalized_selected.append(max(0, min(1, norm_sel)))
+        normalized_population.append(max(0, min(1, norm_pop)))
+
+    # Close the polygon
+    normalized_selected.append(normalized_selected[0])
+    normalized_population.append(normalized_population[0])
+    labels_closed = labels + [labels[0]]
+
     fig = go.Figure()
-    
-    for cluster_id in selected_clusters:
-        cluster_data = cluster_profiles[cluster_profiles['Cluster_SOM_KMeans'] == cluster_id]
-        if len(cluster_data) == 0:
-            continue
-        
-        # Get values and normalize to 0-1 range for visualization
-        # Since data is standardized (mean=0, std=1), we'll shift and scale
-        values = []
-        for feat in features:
-            val = cluster_data[feat].values[0]
-            # Map from approximately [-2, 2] to [0, 1]
-            normalized = (val + 2) / 4
-            values.append(max(0, min(1, normalized)))
-        
-        # Close the polygon
-        values.append(values[0])
-        labels = feature_labels + [feature_labels[0]]
-        
-        cluster_name = get_cluster_name(cluster_id)
-        cluster_color = get_cluster_color(cluster_id)
-        
-        # Convert hex to rgba for fill
-        hex_color = cluster_color.lstrip('#')
-        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        
-        fig.add_trace(go.Scatterpolar(
-            r=values,
-            theta=labels,
-            name=cluster_name,
-            fill='toself',
-            fillcolor=f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, 0.3)',
-            line=dict(color=cluster_color, width=2)
-        ))
-    
+
+    # Population baseline
+    fig.add_trace(go.Scatterpolar(
+        r=normalized_population,
+        theta=labels_closed,
+        fill='toself',
+        fillcolor='rgba(107, 114, 128, 0.2)',
+        line=dict(color='#6b7280', width=2, dash='dash'),
+        name='Population Baseline'
+    ))
+
+    # Selected segment
+    fig.add_trace(go.Scatterpolar(
+        r=normalized_selected,
+        theta=labels_closed,
+        fill='toself',
+        fillcolor='rgba(16, 185, 129, 0.3)',
+        line=dict(color='#10b981', width=3),
+        name='Selected Customers'
+    ))
+
     fig.update_layout(
         polar=dict(
-            bgcolor='#161b22',
+            bgcolor='#1a1f2e',
             radialaxis=dict(
                 visible=True,
                 range=[0, 1],
-                gridcolor='#30363d',
-                tickfont=dict(color='#8b949e', size=8),
-                linecolor='#30363d',
+                gridcolor='#065f46',
+                tickfont=dict(color='#6ee7b7', size=9),
                 tickvals=[0, 0.25, 0.5, 0.75, 1],
-                ticktext=['Low', '', 'Avg', '', 'High']
+                ticktext=['0', '25', '50', '75', '100']
             ),
             angularaxis=dict(
-                gridcolor='#30363d',
-                tickfont=dict(color='#8b949e', size=9),
-                linecolor='#30363d'
+                gridcolor='#065f46',
+                tickfont=dict(color='#d1fae5', size=10)
             )
         ),
-        paper_bgcolor='#0d1117',
-        font=dict(color='#c9d1d9'),
+        paper_bgcolor='#0a0e1a',
+        font=dict(color='#d1fae5'),
         showlegend=True,
         legend=dict(
-            bgcolor='rgba(22, 27, 34, 0.8)',
-            bordercolor='#30363d',
+            bgcolor='rgba(6, 95, 70, 0.6)',
+            bordercolor='#10b981',
             borderwidth=1,
-            font=dict(color='#c9d1d9', size=10),
+            font=dict(color='#d1fae5')
+        ),
+        margin=dict(l=40, r=40, t=40, b=40),
+        height=400
+    )
+
+    return fig
+
+
+def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
+    """Create stacked bar chart for demographic distribution."""
+
+    # Count by cluster and attribute
+    cross_tab = pd.crosstab(df['cluster_name'], df[attribute], normalize='index') * 100
+
+    fig = go.Figure()
+
+    colors_demo = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5']
+
+    for i, attr_val in enumerate(cross_tab.columns):
+        fig.add_trace(go.Bar(
+            y=cross_tab.index,
+            x=cross_tab[attr_val],
+            name=str(attr_val),
             orientation='h',
-            yanchor='bottom',
-            y=-0.3,
-            xanchor='center',
-            x=0.5
-        ),
-        margin=dict(l=60, r=60, t=40, b=80),
-        height=380
-    )
-    
-    return fig
-
-
-def create_population_chart(cluster_stats: pd.DataFrame, selected_clusters: list) -> go.Figure:
-    """Create a horizontal bar chart showing cluster population sizes."""
-    
-    filtered_stats = cluster_stats[cluster_stats['cluster_id'].isin(selected_clusters)].copy()
-    filtered_stats['cluster_name'] = filtered_stats['cluster_id'].map(get_cluster_name)
-    filtered_stats = filtered_stats.sort_values('size', ascending=True)
-    
-    colors = [get_cluster_color(c) for c in filtered_stats['cluster_id']]
-    
-    fig = go.Figure(go.Bar(
-        x=filtered_stats['size'],
-        y=filtered_stats['cluster_name'],
-        orientation='h',
-        marker=dict(color=colors),
-        text=[f"{s:,} ({p:.1f}%)" for s, p in zip(filtered_stats['size'], filtered_stats['percentage'])],
-        textposition='outside',
-        textfont=dict(color='#c9d1d9', size=11)
-    ))
-    
-    fig.update_layout(
-        paper_bgcolor='#0d1117',
-        plot_bgcolor='#161b22',
-        font=dict(color='#c9d1d9'),
-        xaxis=dict(
-            title=dict(
-                text='Number of Customers',
-                font=dict(color='#8b949e')
-            ),
-            gridcolor='#30363d',
-            tickfont=dict(color='#8b949e')
-        ),
-        yaxis=dict(
-            tickfont=dict(color='#c9d1d9'),
-            showgrid=False
-        ),
-        margin=dict(l=10, r=80, t=20, b=40),
-        height=200
-    )
-    
-    return fig
-
-
-def create_feature_distribution(df: pd.DataFrame, feature: str, selected_clusters: list) -> go.Figure:
-    """Create a box plot showing feature distribution per cluster."""
-    
-    filtered_df = df[df['Cluster_SOM_KMeans'].isin(selected_clusters)].copy()
-    filtered_df['cluster_name'] = filtered_df['Cluster_SOM_KMeans'].map(get_cluster_name)
-    
-    fig = go.Figure()
-    
-    for cluster_id in selected_clusters:
-        cluster_data = filtered_df[filtered_df['Cluster_SOM_KMeans'] == cluster_id][feature]
-        cluster_name = get_cluster_name(cluster_id)
-        
-        fig.add_trace(go.Box(
-            y=cluster_data,
-            name=cluster_name,
-            marker_color=get_cluster_color(cluster_id),
-            boxmean=True
+            marker_color=colors_demo[i % len(colors_demo)],
+            text=[f"{val:.1f}%" for val in cross_tab[attr_val]],
+            textposition='inside'
         ))
-    
+
     fig.update_layout(
-        paper_bgcolor='#0d1117',
-        plot_bgcolor='#161b22',
-        font=dict(color='#c9d1d9'),
-        yaxis=dict(
-            title=dict(
-                text=feature.replace('_', ' ').title(),
-                font=dict(color='#8b949e')
-            ),
-            gridcolor='#30363d',
-            tickfont=dict(color='#8b949e'),
-            zeroline=True,
-            zerolinecolor='#58a6ff',
-            zerolinewidth=1
-        ),
+        barmode='stack',
+        paper_bgcolor='#0a0e1a',
+        plot_bgcolor='#1a1f2e',
+        font=dict(color='#d1fae5'),
         xaxis=dict(
-            tickfont=dict(color='#c9d1d9'),
+            title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#10b981')),
+            gridcolor='#065f46',
+            tickfont=dict(color='#6ee7b7'),
+            range=[0, 100]
+        ),
+        yaxis=dict(
+            title=dict(text='<b>Customer Segment</b>', font=dict(color='#10b981')),
+            tickfont=dict(color='#d1fae5'),
             showgrid=False
         ),
-        showlegend=False,
-        margin=dict(l=10, r=10, t=30, b=40),
-        height=250
+        legend=dict(
+            bgcolor='rgba(6, 95, 70, 0.6)',
+            bordercolor='#10b981',
+            borderwidth=1,
+            font=dict(color='#d1fae5'),
+            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#10b981'))
+        ),
+        margin=dict(l=10, r=10, t=20, b=40),
+        height=400
     )
-    
+
     return fig
 
 
-def create_histogram_with_range(df: pd.DataFrame, column: str, range_values: tuple) -> go.Figure:
-    """Create a histogram with highlighted range."""
-    
+def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
+    """Create combined FM Matrix scatter plot with both focus groups."""
+
+    # Determine which focus group column to use (prefer fg1, fallback to fg2)
+    fg_column = None
+    tier_column = None
+
+    if 'fm_segment_fg1' in df.columns and df['fm_segment_fg1'].notna().any():
+        fg_column = 'fm_segment_fg1'
+        tier_column = 'fm_tier_fg1'
+    elif 'fm_segment_fg2' in df.columns and df['fm_segment_fg2'].notna().any():
+        fg_column = 'fm_segment_fg2'
+        tier_column = 'fm_tier_fg2'
+
+    if fg_column is None:
+        # Return empty figure if no FM data
+        fig = go.Figure()
+        fig.update_layout(
+            title="FM Matrix data not available",
+            paper_bgcolor='#0a0e1a',
+            plot_bgcolor='#1a1f2e',
+            font=dict(color='#d1fae5')
+        )
+        return fig
+
+    # Filter to only rows with FM segment data
+    df_with_fm = df[df[fg_column].notna()].copy()
+
+    # Calculate medians and 90th percentiles
+    freq_median = df_with_fm['Frequency'].median()
+    mon_median = df_with_fm['Monetary'].median()
+    freq_p90 = df_with_fm['Frequency'].quantile(0.90)
+    mon_p90 = df_with_fm['Monetary'].quantile(0.90)
+
+    # Define colors
+    segment_colors = {
+        'Champions': '#10b981',      # Green
+        'Frequent Flyer': '#3b82f6', # Blue
+        'Premium Occasional': '#f59e0b', # Amber
+        'At Risk': '#ec4899'         # Pink
+    }
+    elite_color = '#8b5cf6'  # Purple for Elite
+
     fig = go.Figure()
-    
-    # Full histogram (dimmed)
-    fig.add_trace(go.Histogram(
-        x=df[column],
-        nbinsx=25,
-        marker_color='#30363d',
-        opacity=0.5,
-        name='All Data'
-    ))
-    
-    # Highlighted range
-    filtered = df[(df[column] >= range_values[0]) & (df[column] <= range_values[1])]
-    fig.add_trace(go.Histogram(
-        x=filtered[column],
-        nbinsx=25,
-        marker_color='#3b82f6',
-        opacity=0.8,
-        name='Selected'
-    ))
-    
-    # Add range indicators
-    fig.add_vline(x=range_values[0], line=dict(color='#60a5fa', dash='dash', width=2))
-    fig.add_vline(x=range_values[1], line=dict(color='#60a5fa', dash='dash', width=2))
-    
+
+    # Add quadrant backgrounds
+    max_freq = df_with_fm['Frequency'].max() * 1.05
+    max_mon = df_with_fm['Monetary'].max() * 1.05
+
+    # Champions quadrant highlight
+    fig.add_shape(type="rect",
+        x0=freq_median, x1=max_freq, y0=mon_median, y1=max_mon,
+        fillcolor='rgba(16, 185, 129, 0.08)', line=dict(width=0), layer='below')
+
+    # Elite zone highlight
+    fig.add_shape(type="rect",
+        x0=freq_p90, x1=max_freq, y0=mon_p90, y1=max_mon,
+        fillcolor='rgba(139, 92, 246, 0.15)', line=dict(width=0), layer='below')
+
+    # Add median reference lines
+    fig.add_hline(y=mon_median, line_dash="dash", line_color="#6b7280", line_width=2, opacity=0.7)
+    fig.add_vline(x=freq_median, line_dash="dash", line_color="#6b7280", line_width=2, opacity=0.7)
+
+    # Plot segments
+    for segment in ['At Risk', 'Premium Occasional', 'Frequent Flyer', 'Champions']:
+        segment_data = df_with_fm[df_with_fm[fg_column] == segment]
+
+        if segment == 'Champions':
+            # Separate Elite from Champions
+            elite_data = segment_data[segment_data[tier_column] == 'Elite']
+            non_elite_data = segment_data[segment_data[tier_column] != 'Elite']
+
+            # Plot non-Elite Champions
+            if len(non_elite_data) > 0:
+                fig.add_trace(go.Scatter(
+                    x=non_elite_data['Frequency'],
+                    y=non_elite_data['Monetary'],
+                    mode='markers',
+                    name=f'Champions (n={len(non_elite_data):,})',
+                    marker=dict(
+                        size=8,
+                        color=segment_colors[segment],
+                        opacity=0.6,
+                        line=dict(color='white', width=0.5)
+                    ),
+                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
+                    text=[f"Customer {row['Loyalty#']}" for _, row in non_elite_data.iterrows()]
+                ))
+
+            # Plot Elite with distinct marker
+            if len(elite_data) > 0:
+                fig.add_trace(go.Scatter(
+                    x=elite_data['Frequency'],
+                    y=elite_data['Monetary'],
+                    mode='markers',
+                    name=f'Elite (n={len(elite_data):,})',
+                    marker=dict(
+                        size=10,
+                        color=elite_color,
+                        opacity=0.8,
+                        symbol='diamond',
+                        line=dict(color='white', width=0.8)
+                    ),
+                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
+                    text=[f"Customer {row['Loyalty#']}" for _, row in elite_data.iterrows()]
+                ))
+        else:
+            if len(segment_data) > 0:
+                fig.add_trace(go.Scatter(
+                    x=segment_data['Frequency'],
+                    y=segment_data['Monetary'],
+                    mode='markers',
+                    name=f'{segment} (n={len(segment_data):,})',
+                    marker=dict(
+                        size=8,
+                        color=segment_colors[segment],
+                        opacity=0.6,
+                        line=dict(color='white', width=0.5)
+                    ),
+                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
+                    text=[f"Customer {row['Loyalty#']}" for _, row in segment_data.iterrows()]
+                ))
+
+    # Add quadrant labels as annotations
+    fig.add_annotation(x=freq_median * 1.4, y=mon_median * 1.4,
+        text="Champions", showarrow=False,
+        font=dict(size=14, color='#d1fae5', family="Arial Black"),
+        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+
+    fig.add_annotation(x=freq_median * 0.3, y=mon_median * 1.4,
+        text="Premium<br>Occasional", showarrow=False,
+        font=dict(size=14, color='#d1fae5', family="Arial Black"),
+        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+
+    fig.add_annotation(x=freq_median * 1.4, y=mon_median * 0.3,
+        text="Frequent<br>Flyer", showarrow=False,
+        font=dict(size=14, color='#d1fae5', family="Arial Black"),
+        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+
+    fig.add_annotation(x=freq_median * 0.3, y=mon_median * 0.3,
+        text="At Risk", showarrow=False,
+        font=dict(size=14, color='#d1fae5', family="Arial Black"),
+        bgcolor='rgba(10, 14, 26, 0.7)', borderpad=4)
+
+    # Add Elite label
+    elite_center_x = (freq_p90 + max_freq) / 2
+    elite_center_y = (mon_p90 + max_mon) / 2
+    fig.add_annotation(x=elite_center_x, y=elite_center_y,
+        text="Elite", showarrow=False,
+        font=dict(size=13, color='#d1fae5', family="Arial Black"),
+        bgcolor='rgba(139, 92, 246, 0.3)', borderpad=4)
+
     fig.update_layout(
-        paper_bgcolor='#0d1117',
-        plot_bgcolor='#161b22',
-        font=dict(color='#c9d1d9'),
-        xaxis=dict(gridcolor='#30363d', tickfont=dict(color='#8b949e', size=9)),
-        yaxis=dict(gridcolor='#30363d', tickfont=dict(color='#8b949e', size=9)),
-        showlegend=False,
-        barmode='overlay',
-        margin=dict(l=10, r=10, t=10, b=30),
-        height=100
+        title=dict(
+            text=f'FM Matrix: Value-Based Segmentation<br><sub>n={len(df_with_fm):,} customers</sub>',
+            font=dict(color='#10b981', size=14)
+        ),
+        xaxis=dict(
+            title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#10b981')),
+            gridcolor='#065f46',
+            tickfont=dict(color='#6ee7b7'),
+            showgrid=True,
+            zeroline=False
+        ),
+        yaxis=dict(
+            title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#10b981')),
+            gridcolor='#065f46',
+            tickfont=dict(color='#6ee7b7'),
+            showgrid=True,
+            zeroline=False
+        ),
+        paper_bgcolor='#0a0e1a',
+        plot_bgcolor='#1a1f2e',
+        font=dict(color='#d1fae5'),
+        legend=dict(
+            bgcolor='rgba(6, 95, 70, 0.6)',
+            bordercolor='#10b981',
+            borderwidth=1,
+            font=dict(color='#d1fae5', size=9)
+        ),
+        hovermode='closest',
+        height=500
     )
-    
+
     return fig
 
 
@@ -462,321 +609,376 @@ def create_histogram_with_range(df: pd.DataFrame, column: str, range_values: tup
 def main():
     # Load data
     try:
-        main_data, cluster_stats, cluster_profiles, pca_metadata = load_data()
+        df_full = load_data()
     except FileNotFoundError as e:
-        st.error(f"""
-        **Datei nicht gefunden!**
-        
-        Bitte stelle sicher, dass alle CSV-Dateien im gleichen Verzeichnis wie das Script liegen:
-        - `dashboard_main_data.csv`
-        - `cluster_statistics.csv`
-        - `cluster_profiles.csv`
-        - `pca_metadata.csv`
-        
-        Fehler: {e}
-        """)
+        st.error(f"Data file not found: {e}")
         return
-    
-    df = main_data.copy()
-    
-    # --- Sidebar: Filters ---
+
+    # ==================== SIDEBAR: FILTERS ====================
     with st.sidebar:
-        st.markdown("""
-        <div style='text-align: center; padding: 20px 0;'>
-            <h1 style='color: #58a6ff; margin: 0;'>✈️ AeroAnalytics</h1>
-            <p style='color: #8b949e; font-size: 0.9rem; margin-top: 5px;'>AIAI Customer Segmentation</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # --- Cluster Selection ---
-        st.markdown("### 🎯 Cluster Selection")
-        
-        selected_clusters = []
-        for cluster_id, config in CLUSTER_CONFIG.items():
+        st.markdown("## Filters")
+
+        # --- BEHAVIORAL FILTERS ---
+        with st.expander("Behavioral Filters", expanded=True):
+            # Select All button
             col1, col2 = st.columns([3, 1])
-            with col1:
-                if st.checkbox(
-                    config['name'],
-                    value=True,
-                    key=f"cluster_{cluster_id}",
-                    help=config['desc']
-                ):
-                    selected_clusters.append(cluster_id)
             with col2:
-                st.markdown(
-                    f"<span style='display: inline-block; width: 12px; height: 12px; "
-                    f"background-color: {config['color']}; border-radius: 50%;'></span>",
-                    unsafe_allow_html=True
-                )
-        
-        st.markdown("---")
-        
-        # --- Feature Filters ---
-        st.markdown("### 🎚️ Feature Filters")
-        
-        # Distance Variability
-        st.markdown("**Distance Variability**")
-        dist_min, dist_max = float(df['distance_variability'].min()), float(df['distance_variability'].max())
-        dist_range = st.slider(
-            "dist_var", min_value=dist_min, max_value=dist_max,
-            value=(dist_min, dist_max), format="%.2f",
-            label_visibility="collapsed"
-        )
-        st.plotly_chart(
-            create_histogram_with_range(df, 'distance_variability', dist_range),
-            use_container_width=True, config={'displayModeBar': False}
-        )
-        
-        # Companion Flight Ratio
-        st.markdown("**Companion Flight Ratio**")
-        comp_min, comp_max = float(df['companion_flight_ratio'].min()), float(df['companion_flight_ratio'].max())
-        comp_range = st.slider(
-            "comp_ratio", min_value=comp_min, max_value=comp_max,
-            value=(comp_min, comp_max), format="%.2f",
-            label_visibility="collapsed"
-        )
-        st.plotly_chart(
-            create_histogram_with_range(df, 'companion_flight_ratio', comp_range),
-            use_container_width=True, config={'displayModeBar': False}
-        )
-        
-        # Flight Regularity
-        st.markdown("**Flight Regularity**")
-        reg_min, reg_max = float(df['flight_regularity'].min()), float(df['flight_regularity'].max())
-        reg_range = st.slider(
-            "flight_reg", min_value=reg_min, max_value=reg_max,
-            value=(reg_min, reg_max), format="%.2f",
-            label_visibility="collapsed"
-        )
-        st.plotly_chart(
-            create_histogram_with_range(df, 'flight_regularity', reg_range),
-            use_container_width=True, config={'displayModeBar': False}
-        )
-        
-        # Redemption Frequency
-        st.markdown("**Redemption Frequency**")
-        red_min, red_max = float(df['redemption_frequency'].min()), float(df['redemption_frequency'].max())
-        red_range = st.slider(
-            "redeem_freq", min_value=red_min, max_value=red_max,
-            value=(red_min, red_max), format="%.2f",
-            label_visibility="collapsed"
-        )
-        st.plotly_chart(
-            create_histogram_with_range(df, 'redemption_frequency', red_range),
-            use_container_width=True, config={'displayModeBar': False}
-        )
-        
-        st.markdown("---")
-        
-        # Export Button
-        if st.button("📥 Export Filtered Data", use_container_width=True, type="primary"):
-            st.session_state.show_export = True
-    
-    # --- Apply Filters ---
-    filtered_df = df[
-        (df['distance_variability'] >= dist_range[0]) & (df['distance_variability'] <= dist_range[1]) &
-        (df['companion_flight_ratio'] >= comp_range[0]) & (df['companion_flight_ratio'] <= comp_range[1]) &
-        (df['flight_regularity'] >= reg_range[0]) & (df['flight_regularity'] <= reg_range[1]) &
-        (df['redemption_frequency'] >= red_range[0]) & (df['redemption_frequency'] <= red_range[1]) &
-        (df['Cluster_SOM_KMeans'].isin(selected_clusters if selected_clusters else [-1]))
-    ]
-    
-    # --- Main Content ---
-    
-    # Top metrics row
-    col1, col2, col3, col4 = st.columns(4)
-    
-    total_customers = len(df)
-    filtered_customers = len(filtered_df)
-    
-    with col1:
-        st.metric(
-            label="👥 Total Customers",
-            value=f"{total_customers:,}"
-        )
-    
-    with col2:
-        st.metric(
-            label="🔍 Filtered Selection",
-            value=f"{filtered_customers:,}",
-            delta=f"{filtered_customers/total_customers*100:.1f}%" if total_customers > 0 else "0%"
-        )
-    
-    with col3:
-        clusters_shown = len(selected_clusters)
-        st.metric(
-            label="🎯 Clusters Shown",
-            value=f"{clusters_shown} / 3"
-        )
-    
-    with col4:
-        total_var = pca_metadata['variance_explained'].sum() * 100
-        st.metric(
-            label="📊 PCA Variance",
-            value=f"{total_var:.1f}%"
-        )
-    
-    st.markdown("---")
-    
-    # Export download (if triggered)
-    if st.session_state.get('show_export', False):
-        csv = filtered_df.to_csv(index=False)
-        st.download_button(
-            label="⬇️ Download Filtered Data as CSV",
-            data=csv,
-            file_name="aiai_filtered_segments.csv",
-            mime="text/csv"
-        )
-        st.session_state.show_export = False
-    
-    # Main layout: 3D plot + Analytics
-    main_col, analytics_col = st.columns([2, 1])
-    
-    with main_col:
-        st.markdown("### 🌐 3D PCA Cluster Visualization")
-        st.markdown(
-            "<p style='color: #8b949e; font-size: 0.85rem;'>"
-            "Drag to rotate • Scroll to zoom • Hover for customer details</p>",
-            unsafe_allow_html=True
-        )
-        
-        if len(filtered_df) > 0:
-            fig_3d = create_3d_scatter(filtered_df, pca_metadata)
-            st.plotly_chart(fig_3d, use_container_width=True, config={'displaylogo': False})
-        else:
-            st.warning("Keine Daten entsprechen den aktuellen Filtern. Bitte Auswahl anpassen.")
-        
-        # Customer Detail Section
-        st.markdown("### 🔍 Customer Detail Lookup")
-        
-        if len(filtered_df) > 0:
-            # Customer selector
-            customer_options = filtered_df['Loyalty#'].astype(str).tolist()
-            selected_customer_id = st.selectbox(
-                "Select a customer ID to view details",
-                options=[''] + customer_options,
-                format_func=lambda x: "Choose a customer..." if x == '' else f"Customer {x}"
+                if st.button("Reset All", key="reset_behavioral"):
+                    st.rerun()
+
+            # Customer Segments
+            segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
+            selected_segments = st.multiselect(
+                "Customer Segments",
+                options=segment_options,
+                default=segment_options
             )
-            
-            if selected_customer_id and selected_customer_id != '':
-                customer = filtered_df[filtered_df['Loyalty#'] == int(selected_customer_id)].iloc[0]
-                cluster_id = customer['Cluster_SOM_KMeans']
-                cluster_name = get_cluster_name(cluster_id)
-                cluster_color = get_cluster_color(cluster_id)
-                
-                detail_cols = st.columns([1, 1, 1])
-                
-                with detail_cols[0]:
-                    st.markdown(f"""
-                    <div style='background: #21262d; padding: 15px; border-radius: 8px; border-left: 4px solid {cluster_color};'>
-                        <h4 style='margin: 0; color: #c9d1d9;'>Customer {customer['Loyalty#']}</h4>
-                        <span style='background: {cluster_color}40; color: {cluster_color}; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;'>{cluster_name}</span>
-                        <p style='color: #8b949e; font-style: italic; margin-top: 10px; font-size: 0.85rem;'>{CLUSTER_CONFIG[cluster_id]['desc']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with detail_cols[1]:
-                    st.markdown(f"""
-                    <div style='background: #21262d; padding: 15px; border-radius: 8px;'>
-                        <h5 style='color: #8b949e; margin-top: 0;'>Behavioral Features</h5>
-                        <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
-                            <span style='color: #8b949e;'>📏 Distance Var</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['distance_variability']:.3f}</span>
-                        </div>
-                        <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
-                            <span style='color: #8b949e;'>👥 Companion Ratio</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['companion_flight_ratio']:.3f}</span>
-                        </div>
-                        <div style='display: flex; justify-content: space-between;'>
-                            <span style='color: #8b949e;'>📅 Flight Regularity</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['flight_regularity']:.3f}</span>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with detail_cols[2]:
-                    st.markdown(f"""
-                    <div style='background: #21262d; padding: 15px; border-radius: 8px;'>
-                        <h5 style='color: #8b949e; margin-top: 0;'>Position & Points</h5>
-                        <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
-                            <span style='color: #8b949e;'>🎁 Redemption Freq</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['redemption_frequency']:.3f}</span>
-                        </div>
-                        <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'>
-                            <span style='color: #8b949e;'>📍 PC1</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['PC1']:.3f}</span>
-                        </div>
-                        <div style='display: flex; justify-content: space-between;'>
-                            <span style='color: #8b949e;'>📍 PC2 / PC3</span>
-                            <span style='color: #c9d1d9; font-weight: bold;'>{customer['PC2']:.2f} / {customer['PC3']:.2f}</span>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-    
-    with analytics_col:
-        st.markdown("### 📊 Cluster Analytics")
-        
-        # Radar Chart - Cluster Profiles
-        st.markdown("#### Cluster Profiles")
-        st.markdown(
-            "<p style='color: #8b949e; font-size: 0.75rem;'>"
-            "Normalized feature averages per cluster</p>",
-            unsafe_allow_html=True
+
+            # Redemption Frequency
+            redemption_range = st.slider(
+                "Redemption Frequency",
+                min_value=0.0,
+                max_value=1.0,
+                value=(0.0, 1.0),
+                step=0.01,
+                format="%.2f"
+            )
+
+            # Flight Regularity
+            flight_reg_range = st.slider(
+                "Flight Regularity",
+                min_value=float(df_full['flight_regularity'].min()),
+                max_value=float(df_full['flight_regularity'].max()),
+                value=(float(df_full['flight_regularity'].min()), float(df_full['flight_regularity'].max())),
+                step=0.01
+            )
+
+            # Companion Flight Ratio
+            companion_range = st.slider(
+                "Companion Flight Ratio",
+                min_value=float(df_full['companion_flight_ratio'].min()),
+                max_value=float(df_full['companion_flight_ratio'].max()),
+                value=(float(df_full['companion_flight_ratio'].min()), float(df_full['companion_flight_ratio'].max())),
+                step=0.01
+            )
+
+            # Distance Variability
+            distance_var_range = st.slider(
+                "Distance Variability",
+                min_value=float(df_full['distance_variability'].min()),
+                max_value=float(df_full['distance_variability'].max()),
+                value=(float(df_full['distance_variability'].min()), float(df_full['distance_variability'].max())),
+                step=0.01
+            )
+
+            # Average Distance per Flight
+            avg_distance_range = st.slider(
+                "Avg Distance per Flight",
+                min_value=float(df_full['avg_distance_per_flight'].min()),
+                max_value=float(df_full['avg_distance_per_flight'].max()),
+                value=(float(df_full['avg_distance_per_flight'].min()), float(df_full['avg_distance_per_flight'].max())),
+                step=10.0
+            )
+
+            # Peak Season Sin
+            peak_season_range = st.slider(
+                "Peak Season (Sin)",
+                min_value=float(df_full['peak_season_sin'].min()),
+                max_value=float(df_full['peak_season_sin'].max()),
+                value=(float(df_full['peak_season_sin'].min()), float(df_full['peak_season_sin'].max())),
+                step=0.01
+            )
+
+        # --- DEMOGRAPHIC FILTERS ---
+        with st.expander("Demographic Filters", expanded=False):
+            # Reset button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("Reset All", key="reset_demographic"):
+                    st.rerun()
+
+            # Province
+            province_options = sorted([p for p in df_full['Province or State'].unique() if pd.notna(p)])
+            selected_provinces = st.multiselect(
+                "Province",
+                options=province_options,
+                default=province_options
+            )
+
+            # City
+            city_options = sorted([c for c in df_full['City'].unique() if pd.notna(c) and c != 'Unknown'])
+            selected_cities = st.multiselect(
+                "City",
+                options=city_options,
+                default=city_options
+            )
+
+            # FSA
+            fsa_options = sorted([f for f in df_full['FSA'].unique() if pd.notna(f)])
+            selected_fsa = st.multiselect(
+                "FSA (Forward Sortation Area)",
+                options=fsa_options,
+                default=fsa_options
+            )
+
+            # Gender
+            gender_options = sorted([g for g in df_full['Gender'].unique() if pd.notna(g)])
+            selected_gender = st.multiselect(
+                "Gender",
+                options=gender_options,
+                default=gender_options
+            )
+
+            # Education Level
+            education_options = sorted([e for e in df_full['Education'].unique() if pd.notna(e) and e != 'Unknown'])
+            selected_education = st.multiselect(
+                "Education Level",
+                options=education_options,
+                default=education_options
+            )
+
+            # Location Code
+            location_options = sorted([l for l in df_full['Location Code'].unique() if pd.notna(l)])
+            selected_location = st.multiselect(
+                "Location Code",
+                options=location_options,
+                default=location_options
+            )
+
+        # --- VALUE-BASED FILTERS ---
+        with st.expander("Value-Based Filters", expanded=False):
+            # Reset button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("Reset All", key="reset_value"):
+                    st.rerun()
+
+            # Focus Group Selection
+            focus_group_options = []
+            if 'fm_segment_fg1' in df_full.columns:
+                focus_group_options.append('Focus Group 1: Loyalty Members | Active')
+            if 'fm_segment_fg2' in df_full.columns:
+                focus_group_options.append('Focus Group 2: Ex-Loyalty Members | Active')
+
+            selected_focus_groups = st.multiselect(
+                "Focus Groups",
+                options=focus_group_options,
+                default=focus_group_options
+            )
+
+            # Income Range
+            income_range = st.slider(
+                "Income Range",
+                min_value=0,
+                max_value=int(df_full['Income'].max()),
+                value=(0, int(df_full['Income'].max())),
+                format="$%d"
+            )
+
+            # Frequency Range
+            freq_range = st.slider(
+                "Frequency (Flights per Active Month)",
+                min_value=float(df_full['Frequency'].min()),
+                max_value=float(df_full['Frequency'].max()),
+                value=(float(df_full['Frequency'].min()), float(df_full['Frequency'].max())),
+                step=0.1
+            )
+
+            # Monetary Range
+            monetary_range = st.slider(
+                "Monetary (Distance per Active Month)",
+                min_value=float(df_full['Monetary'].min()),
+                max_value=float(df_full['Monetary'].max()),
+                value=(float(df_full['Monetary'].min()), float(df_full['Monetary'].max())),
+                step=10.0
+            )
+
+        st.divider()
+
+        # Data Source Info
+        st.markdown(f"""
+        <p style='font-size: 12px; color: #6ee7b7; text-align: center;'>
+            <b>Data Source</b><br>
+            2020-2021 Active Customer Base<br>
+            (n={len(df_full):,})
+        </p>
+        """, unsafe_allow_html=True)
+
+    # ==================== APPLY FILTERS ====================
+    df_filtered = df_full.copy()
+
+    # Apply behavioral filters
+    selected_cluster_ids = [k for k, v in CLUSTER_CONFIG.items() if v['name'] in selected_segments]
+    df_filtered = df_filtered[df_filtered['Behavioral_Cluster'].isin(selected_cluster_ids)]
+
+    df_filtered = df_filtered[
+        (df_filtered['redemption_frequency'] >= redemption_range[0]) &
+        (df_filtered['redemption_frequency'] <= redemption_range[1]) &
+        (df_filtered['flight_regularity'] >= flight_reg_range[0]) &
+        (df_filtered['flight_regularity'] <= flight_reg_range[1]) &
+        (df_filtered['companion_flight_ratio'] >= companion_range[0]) &
+        (df_filtered['companion_flight_ratio'] <= companion_range[1]) &
+        (df_filtered['distance_variability'] >= distance_var_range[0]) &
+        (df_filtered['distance_variability'] <= distance_var_range[1]) &
+        (df_filtered['avg_distance_per_flight'] >= avg_distance_range[0]) &
+        (df_filtered['avg_distance_per_flight'] <= avg_distance_range[1]) &
+        (df_filtered['peak_season_sin'] >= peak_season_range[0]) &
+        (df_filtered['peak_season_sin'] <= peak_season_range[1])
+    ]
+
+    # Apply demographic filters
+    df_filtered = df_filtered[df_filtered['Province or State'].isin(selected_provinces)]
+    df_filtered = df_filtered[df_filtered['City'].isin(selected_cities)]
+    df_filtered = df_filtered[df_filtered['FSA'].isin(selected_fsa)]
+    df_filtered = df_filtered[df_filtered['Gender'].isin(selected_gender)]
+    df_filtered = df_filtered[df_filtered['Education'].isin(selected_education)]
+    df_filtered = df_filtered[df_filtered['Location Code'].isin(selected_location)]
+
+    # Apply value-based filters
+    df_filtered = df_filtered[
+        (df_filtered['Income'] >= income_range[0]) &
+        (df_filtered['Income'] <= income_range[1]) &
+        (df_filtered['Frequency'] >= freq_range[0]) &
+        (df_filtered['Frequency'] <= freq_range[1]) &
+        (df_filtered['Monetary'] >= monetary_range[0]) &
+        (df_filtered['Monetary'] <= monetary_range[1])
+    ]
+
+    # Apply focus group filter
+    if selected_focus_groups:
+        focus_group_mask = pd.Series([False] * len(df_filtered), index=df_filtered.index)
+        if 'Focus Group 1: Loyalty Members | Active' in selected_focus_groups:
+            focus_group_mask |= df_filtered['fm_segment_fg1'].notna()
+        if 'Focus Group 2: Ex-Loyalty Members | Active' in selected_focus_groups:
+            focus_group_mask |= df_filtered['fm_segment_fg2'].notna()
+        df_filtered = df_filtered[focus_group_mask]
+
+    # ==================== MAIN HEADER ====================
+    st.markdown("""
+    <div style='text-align: center; padding: 20px 0;'>
+        <h1 style='font-size: 2.5rem; margin: 0;'>AIAI Customer Segmentation Strategy</h1>
+        <p style='color: #6ee7b7; font-size: 1.1rem; margin-top: 10px;'>Behavioral Clustering & Value Analysis | Group 80</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Top-Level KPIs
+    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+
+    with kpi_col1:
+        delta_pct = (len(df_filtered) / len(df_full) * 100) - 100
+        st.metric(
+            "Selected Customers",
+            f"{len(df_filtered):,}",
+            delta=f"{delta_pct:.1f}% of base" if delta_pct < 0 else f"{len(df_filtered)/len(df_full)*100:.1f}% of base"
         )
-        
-        if selected_clusters:
-            fig_radar = create_radar_chart(cluster_profiles, selected_clusters)
+
+    with kpi_col2:
+        avg_redemption = df_filtered['redemption_frequency'].mean()
+        pop_redemption = df_full['redemption_frequency'].mean()
+        delta_redemption = ((avg_redemption - pop_redemption) / pop_redemption * 100) if pop_redemption > 0 else 0
+        st.metric(
+            "Avg. Redemption Rate",
+            f"{avg_redemption:.1%}",
+            delta=f"{delta_redemption:+.1f}% vs pop"
+        )
+
+    with kpi_col3:
+        avg_distance = df_filtered['avg_distance_per_flight'].mean()
+        pop_distance = df_full['avg_distance_per_flight'].mean()
+        delta_distance = ((avg_distance - pop_distance) / pop_distance * 100) if pop_distance > 0 else 0
+        st.metric(
+            "Avg. Distance Flown",
+            f"{avg_distance:,.0f} km",
+            delta=f"{delta_distance:+.1f}% vs pop"
+        )
+
+    with kpi_col4:
+        avg_clv = df_filtered['Customer Lifetime Value'].mean()
+        st.metric(
+            "Avg. CLV",
+            f"${avg_clv:,.0f}"
+        )
+
+    st.markdown("---")
+
+    # ==================== ROW 1: 3D VISUALIZATION ====================
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>3D Customer Landscape</h3></div>", unsafe_allow_html=True)
+
+    if len(df_filtered) > 0:
+        fig_3d = create_3d_universe(df_filtered)
+        st.plotly_chart(fig_3d, use_container_width=True, config={'displaylogo': False})
+    else:
+        st.warning("No customers match the current filters. Please adjust your selection.")
+
+    st.markdown("---")
+
+    # ==================== ROW 2: FM MATRIX SEGMENTATION ====================
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
+
+    if len(df_filtered) > 0:
+        fig_fm = create_fm_matrix_combined(df_filtered)
+        st.plotly_chart(fig_fm, use_container_width=True, config={'displaylogo': False})
+    else:
+        st.warning("No customers match the current filters. Please adjust your selection.")
+
+    st.markdown("---")
+
+    # ==================== ROW 3: COMPARATIVE ANALYSIS ====================
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>Comparative Analysis: Selected vs Population</h3></div>", unsafe_allow_html=True)
+
+    if len(df_filtered) > 0:
+        persona_col1, persona_col2 = st.columns(2)
+
+        with persona_col1:
+            st.markdown("#### Behavioral Signature")
+            fig_radar = create_persona_radar(df_filtered, df_full)
             st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
-        else:
-            st.info("Select clusters to view profiles")
-        
-        # Population Size
-        st.markdown("#### Population Distribution")
-        if selected_clusters:
-            fig_pop = create_population_chart(cluster_stats, selected_clusters)
-            st.plotly_chart(fig_pop, use_container_width=True, config={'displayModeBar': False})
-        
-        # Feature Distribution Selector
-        st.markdown("#### Feature Distribution")
-        feature_to_show = st.selectbox(
-            "Select feature",
-            options=['distance_variability', 'companion_flight_ratio', 
-                     'flight_regularity', 'redemption_frequency'],
-            format_func=lambda x: x.replace('_', ' ').title()
+
+        with persona_col2:
+            st.markdown("#### Demographic Composition")
+            demo_attribute = st.selectbox(
+                "Select demographic attribute",
+                options=['Education', 'Gender', 'Marital Status'],
+                key='demo_split'
+            )
+            fig_demo = create_demographic_split(df_filtered, demo_attribute)
+            st.plotly_chart(fig_demo, use_container_width=True, config={'displayModeBar': False})
+
+    st.markdown("---")
+
+    # ==================== ROW 4: DATA EXPORT ====================
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>Data Export</h3></div>", unsafe_allow_html=True)
+
+    if len(df_filtered) > 0:
+        # Preview table
+        st.markdown("##### Data Preview (First 10 Records)")
+        preview_cols = ['Loyalty#', 'cluster_name', 'Education', 'Income', 'Province or State',
+                       'redemption_frequency', 'Frequency', 'Monetary', 'Customer Lifetime Value']
+        st.dataframe(
+            df_filtered[preview_cols].head(10),
+            use_container_width=True,
+            hide_index=True
         )
-        
-        if selected_clusters and len(filtered_df) > 0:
-            fig_dist = create_feature_distribution(filtered_df, feature_to_show, selected_clusters)
-            st.plotly_chart(fig_dist, use_container_width=True, config={'displayModeBar': False})
-        
-        # Cluster Statistics Table
-        st.markdown("#### Cluster Statistics")
-        if selected_clusters:
-            stats_data = []
-            for cluster_id in selected_clusters:
-                cluster_data = cluster_stats[cluster_stats['cluster_id'] == cluster_id]
-                if len(cluster_data) > 0:
-                    row = cluster_data.iloc[0]
-                    stats_data.append({
-                        'Cluster': get_cluster_name(cluster_id),
-                        'Size': f"{int(row['size']):,}",
-                        '%': f"{row['percentage']:.1f}%",
-                        'Dist Var': f"{row['mean_distance_variability']:.2f}",
-                        'Comp Ratio': f"{row['mean_companion_flight_ratio']:.2f}"
-                    })
-            
-            if stats_data:
-                stats_df = pd.DataFrame(stats_data)
-                st.dataframe(stats_df, use_container_width=True, hide_index=True)
+
+        # Export button
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            csv = df_filtered.to_csv(index=False)
+            st.download_button(
+                label="Download Selected Customers (CSV)",
+                data=csv,
+                file_name=f"aiai_customers_{len(df_filtered)}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                type="primary"
+            )
 
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; color: #8b949e; padding: 20px 0;'>
-        <p style='margin: 0;'>AeroAnalytics Dashboard | Amazing International Airlines Inc.</p>
-        <p style='font-size: 0.8rem; margin-top: 5px;'>SOM + K-Means Customer Segmentation | PCA Visualization</p>
+    <div style='text-align: center; color: #6ee7b7; padding: 20px 0;'>
+        <p style='margin: 0;'><strong>AIAI Strategic Explorer</strong> | Amazing International Airlines Inc.</p>
+        <p style='font-size: 0.8rem; margin-top: 5px; color: #10b981;'>Powered by Behavioral Clustering (SOM + K-Means) | PCA Visualization | Group 80 Analytics</p>
     </div>
     """, unsafe_allow_html=True)
 
