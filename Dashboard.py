@@ -515,53 +515,6 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def create_pca_loadings_heatmap():
-    """Create PCA component loadings heatmap using matplotlib/seaborn."""
-    try:
-        # Load PCA loadings
-        loadings = pd.read_csv('data/clustering_data/pca_loadings.csv', index_col=0)
-
-        # Rename the y-axis labels (feature names)
-        feature_name_mapping = {
-            'distance_variability_scaled': 'Distance Variability',
-            'companion_flight_ratio_scaled': 'Companion Flight Ratio',
-            'flight_regularity_scaled': 'Flight Regularity',
-            'redemption_frequency_scaled': 'Redemption Frequency'
-        }
-        loadings.index = loadings.index.map(lambda x: feature_name_mapping.get(x, x))
-
-        # Create figure with extra space at top
-        fig, ax = plt.subplots(figsize=(5, 10))
-        sns.heatmap(loadings, annot=True, cmap='PiYG', center=0, fmt='.3f',
-                    ax=ax, linewidths=0.5, annot_kws={'fontsize': 13},
-                    cbar_kws={'label': 'Loading', 'orientation': 'horizontal', 'pad': 0.15})
-        ax.set_xlabel('Principal Components', fontweight='bold', fontsize=15)
-        ax.set_ylabel('Behavioral Features', fontweight='bold', fontsize=15)
-
-        # Rotate y-axis labels by 45 degrees
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=45, ha='right', fontsize=14)
-        ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
-
-        # Move colorbar to top and increase font sizes
-        cbar = ax.collections[0].colorbar
-        cbar.ax.xaxis.set_ticks_position('top')
-        cbar.ax.xaxis.set_label_position('top')
-        cbar.ax.tick_params(labelsize=14)  # Colorbar tick labels font size
-        cbar.set_label('Loading', fontsize=16, fontweight='bold')  # Colorbar label font size
-
-        # Adjust layout to prevent overlap
-        plt.subplots_adjust(top=0.9)
-
-        return fig
-    except FileNotFoundError:
-        # Return empty figure if file doesn't exist
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.text(0.5, 0.5, 'PCA loadings data not available',
-                ha='center', va='center', fontsize=12)
-        ax.axis('off')
-        return fig
-
-
 def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
     """Create stacked bar chart for demographic distribution."""
 
@@ -628,18 +581,11 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
         df_population: Full population data for calculating reference lines
     """
 
-    # Determine which focus group column to use (prefer fg1, fallback to fg2)
-    fg_column = None
-    tier_column = None
+    # Use the combined column directly
+    fg_column = 'fm_segment_combined'
+    tier_column = 'fm_tier_combined'
 
-    if 'fm_segment_fg1' in df_filtered.columns and df_filtered['fm_segment_fg1'].notna().any():
-        fg_column = 'fm_segment_fg1'
-        tier_column = 'fm_tier_fg1'
-    elif 'fm_segment_fg2' in df_filtered.columns and df_filtered['fm_segment_fg2'].notna().any():
-        fg_column = 'fm_segment_fg2'
-        tier_column = 'fm_tier_fg2'
-
-    if fg_column is None:
+    if fg_column not in df_filtered.columns:
         # Return empty figure if no FM data
         fig = go.Figure()
         fig.update_layout(
@@ -802,10 +748,6 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
         xanchor='right', yanchor='top')
 
     fig.update_layout(
-        title=dict(
-            text=f'FM Matrix: Value-Based Segmentation<br><sub>n={len(df_with_fm):,} customers</sub>',
-            font=dict(color='#047857', size=14)
-        ),
         xaxis=dict(
             title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#047857')),
             gridcolor='#d1d5db',
@@ -834,7 +776,8 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
             font=dict(color='#1f2937', size=9)
         ),
         hovermode='closest',
-        height=500
+        height=500,
+        margin=dict(l=50, r=20, t=20, b=50)  # CHANGED: Reduced top margin from default
     )
 
     return fig
@@ -1155,7 +1098,7 @@ def main():
     # ==================== ROW 2: FM MATRIX SEGMENTATION ====================
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
 
-    # Add description paragraph
+    # Add description paragraph with minimal spacing
     st.markdown("""
     <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
     This scatter plot segments customers using Frequency-Monetary analysis based on 2021 flight activity. 
