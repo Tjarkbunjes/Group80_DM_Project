@@ -13,6 +13,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -49,7 +51,7 @@ st.markdown("""
     }
 
     [data-testid="stSidebar"] p {
-        color: #6b7280 !important;
+        color: #00411E !important;
         font-size: 14px !important;
     }
 
@@ -70,29 +72,29 @@ st.markdown("""
 
     /* Checkbox styling - GREEN - Multiple approaches for compatibility */
     [data-testid="stSidebar"] input[type="checkbox"] {
-        accent-color: #45AF28 !important;
+        accent-color: #00411E !important;
         cursor: pointer !important;
     }
 
     /* For browsers that don't support accent-color */
     [data-testid="stSidebar"] input[type="checkbox"]:checked {
-        background-color: #45AF28 !important;
-        border-color: #45AF28 !important;
+        background-color: #00411E !important;
+        border-color: #00411E !important;
     }
 
     /* Streamlit specific checkbox styling */
     [data-testid="stSidebar"] input[type="checkbox"]:checked::before {
-        background-color: #45AF28 !important;
+        background-color: #00411E !important;
     }
 
     /* Alternative Streamlit checkbox selectors */
     [data-testid="stCheckbox"] input[type="checkbox"] {
-        accent-color: #45AF28 !important;
+        accent-color: #00411E !important;
     }
 
     [data-testid="stCheckbox"] input[type="checkbox"]:checked {
-        background-color: #45AF28 !important;
-        border-color: #45AF28 !important;
+        background-color: #00411E !important;
+        border-color: #00411E !important;
     }
 
     /* The checkmark itself */
@@ -133,7 +135,7 @@ st.markdown("""
 
     /* Sidebar headers h2 */
     [data-testid="stSidebar"] h2 {
-        color: #10b981 !important;
+        color: #00411E !important;
         font-weight: 700 !important;
         font-size: 22px !important;
     }
@@ -278,7 +280,7 @@ st.markdown("""
 
     /* Headers */
     h1 {
-        color: #047857 !important;
+        color: #00411E !important;
         font-weight: 700 !important;
     }
 
@@ -306,11 +308,16 @@ st.markdown("""
 
     /* Section headers */
     .section-header {
-        background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
+        background: #00411E;
         padding: 12px 20px;
         border-radius: 8px;
-        border-left: 4px solid #10b981;
+        border-left: 4px solid #00411E;
         margin: 20px 0 10px 0;
+        color: white;
+    }
+
+    .section-header h3 {
+        color: white !important;
     }
 
     /* Data source footer */
@@ -345,27 +352,27 @@ CUSTOM_HEX = [
 CLUSTER_CONFIG = {
     0: {
         'name': 'Disengaged Solo',
-        'color': CUSTOM_HEX[8],  # #595959 - Gray for low engagement
+        'color': '#2ca02c',
         'desc': 'Low engagement, infrequent redemption, solo travelers.'
     },
     1: {
         'name': 'Business Commuters',
-        'color': CUSTOM_HEX[1],  # #00622D - Dark green
+        'color': '#ff7f0e',
         'desc': 'Regular solo business travelers, moderate engagement.'
     },
     2: {
         'name': 'Engaged Loyalists',
-        'color': CUSTOM_HEX[3],  # #45AF28 - Bright green - High value
+        'color': '#9467bd', 
         'desc': 'Active, consistent, high redemption, loyal base.'
     },
     3: {
         'name': 'Family Travelers',
-        'color': CUSTOM_HEX[2],  # #00823C - Medium green
+        'color': '#1f77b4',  
         'desc': 'High companion ratio, vacation-oriented patterns.'
     },
     4: {
         'name': 'Explorers',
-        'color': CUSTOM_HEX[4],  # #6BCF5D - Light green
+        'color': '#d62728',
         'desc': 'High distance variability, adventurous patterns.'
     }
 }
@@ -388,8 +395,8 @@ def load_data():
 
     # Add demographic cluster names
     demographic_cluster_mapping = {
-        0: 'Common Regions, Higher-Income Higher-Education',
-        1: 'Lower-Income Lower-Education',
+        0: 'Common Regions, Higher-Income, Higher-Education',
+        1: 'Lower-Income, Lower-Education',
         2: 'Rare Regions, Higher-Education'
     }
     df['demographic_cluster_name'] = df['Demographic_Cluster'].map(demographic_cluster_mapping)
@@ -469,14 +476,14 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
                 range=axis_range
             ),
             yaxis=dict(
-                title=dict(text="<b>PC2: Travel Pattern Axis</b>", font=dict(color='#047857', size=12)),
+                title=dict(text="<b>PC2: Travel Structure Axis</b>", font=dict(color='#047857', size=12)),
                 backgroundcolor='#f9fafb',
                 gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
             zaxis=dict(
-                title=dict(text="<b>PC3: Secondary Pattern Axis</b>", font=dict(color='#047857', size=12)),
+                title=dict(text="<b>PC3: Travel Consistency Axis</b>", font=dict(color='#047857', size=12)),
                 backgroundcolor='#f9fafb',
                 gridcolor='#d1d5eb',
                 showbackground=True,
@@ -492,12 +499,15 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
             bgcolor='rgba(255, 255, 255, 0.9)',
             bordercolor='#d1d5db',
             borderwidth=1,
-            font=dict(color='#1f2937', size=13),
-            title=dict(text="<b>Customer Segments</b>", font=dict(size=14, color='#1f2937')),
-            x=1.0,
-            y=0.9
+            font=dict(color='#1f2937', size=11),
+            title=dict(text="<b>Customer Segments</b>", font=dict(size=12, color='#1f2937')),
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='center',
+            x=0.5
         ),
-        margin=dict(l=0, r=0, t=0, b=100),
+        margin=dict(l=0, r=0, t=80, b=0),
         height=600,
         scene_camera=dict(eye=dict(x=1.5, y=1.5, z=1.3))
     )
@@ -505,88 +515,51 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def create_persona_radar(df: pd.DataFrame, population_df: pd.DataFrame) -> go.Figure:
-    """Create radar chart comparing selection to population baseline."""
+def create_pca_loadings_heatmap():
+    """Create PCA component loadings heatmap using matplotlib/seaborn."""
+    try:
+        # Load PCA loadings
+        loadings = pd.read_csv('data/clustering_data/pca_loadings.csv', index_col=0)
 
-    features = ['redemption_frequency', 'companion_flight_ratio', 'flight_regularity', 'distance_variability']
-    labels = ['Redemption<br>Frequency', 'Companion<br>Ratio', 'Flight<br>Regularity', 'Distance<br>Variability']
+        # Rename the y-axis labels (feature names)
+        feature_name_mapping = {
+            'distance_variability_scaled': 'Distance Variability',
+            'companion_flight_ratio_scaled': 'Companion Flight Ratio',
+            'flight_regularity_scaled': 'Flight Regularity',
+            'redemption_frequency_scaled': 'Redemption Frequency'
+        }
+        loadings.index = loadings.index.map(lambda x: feature_name_mapping.get(x, x))
 
-    # Calculate means
-    selected_means = [df[f].mean() for f in features]
-    population_means = [population_df[f].mean() for f in features]
+        # Create figure with extra space at top
+        fig, ax = plt.subplots(figsize=(5, 10))
+        sns.heatmap(loadings, annot=True, cmap='PiYG', center=0, fmt='.3f',
+                    ax=ax, linewidths=0.5, annot_kws={'fontsize': 13},
+                    cbar_kws={'label': 'Loading', 'orientation': 'horizontal', 'pad': 0.15})
+        ax.set_xlabel('Principal Components', fontweight='bold', fontsize=15)
+        ax.set_ylabel('Behavioral Features', fontweight='bold', fontsize=15)
 
-    # Normalize to 0-1
-    normalized_selected = []
-    normalized_population = []
+        # Rotate y-axis labels by 45 degrees
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=45, ha='right', fontsize=14)
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
 
-    for i, f in enumerate(features):
-        min_val = population_df[f].min()
-        max_val = population_df[f].max()
-        range_val = max_val - min_val if max_val > min_val else 1
+        # Move colorbar to top and increase font sizes
+        cbar = ax.collections[0].colorbar
+        cbar.ax.xaxis.set_ticks_position('top')
+        cbar.ax.xaxis.set_label_position('top')
+        cbar.ax.tick_params(labelsize=14)  # Colorbar tick labels font size
+        cbar.set_label('Loading', fontsize=16, fontweight='bold')  # Colorbar label font size
 
-        norm_sel = (selected_means[i] - min_val) / range_val
-        norm_pop = (population_means[i] - min_val) / range_val
+        # Adjust layout to prevent overlap
+        plt.subplots_adjust(top=0.9)
 
-        normalized_selected.append(max(0, min(1, norm_sel)))
-        normalized_population.append(max(0, min(1, norm_pop)))
-
-    # Close the polygon
-    normalized_selected.append(normalized_selected[0])
-    normalized_population.append(normalized_population[0])
-    labels_closed = labels + [labels[0]]
-
-    fig = go.Figure()
-
-    # Population baseline
-    fig.add_trace(go.Scatterpolar(
-        r=normalized_population,
-        theta=labels_closed,
-        fill='toself',
-        fillcolor='rgba(107, 114, 128, 0.2)',
-        line=dict(color='#6b7280', width=2, dash='dash'),
-        name='Population Baseline'
-    ))
-
-    # Selected segment
-    fig.add_trace(go.Scatterpolar(
-        r=normalized_selected,
-        theta=labels_closed,
-        fill='toself',
-        fillcolor='rgba(16, 185, 129, 0.3)',
-        line=dict(color='#10b981', width=3),
-        name='Selected Customers'
-    ))
-
-    fig.update_layout(
-        polar=dict(
-            bgcolor='#f9fafb',
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1],
-                gridcolor='#d1fae5',
-                tickfont=dict(color='#047857', size=9),
-                tickvals=[0, 0.25, 0.5, 0.75, 1],
-                ticktext=['0', '25', '50', '75', '100']
-            ),
-            angularaxis=dict(
-                gridcolor='#d1fae5',
-                tickfont=dict(color='#065f46', size=10)
-            )
-        ),
-        paper_bgcolor='#ffffff',
-        font=dict(color='#1f2937'),
-        showlegend=True,
-        legend=dict(
-            bgcolor='rgba(255, 255, 255, 0.9)',
-            bordercolor='#d1d5db',
-            borderwidth=1,
-            font=dict(color='#1f2937')
-        ),
-        margin=dict(l=40, r=40, t=40, b=40),
-        height=400
-    )
-
-    return fig
+        return fig
+    except FileNotFoundError:
+        # Return empty figure if file doesn't exist
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.text(0.5, 0.5, 'PCA loadings data not available',
+                ha='center', va='center', fontsize=12)
+        ax.axis('off')
+        return fig
 
 
 def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
@@ -608,7 +581,8 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
             orientation='h',
             marker_color=colors_demo[i % len(colors_demo)],
             text=[f"{val:.1f}%" for val in cross_tab[attr_val]],
-            textposition='inside'
+            textposition='inside',
+            hovertemplate='<b>%{y}</b><br>%{fullData.name}: %{x:.1f}%<extra></extra>'
         ))
 
     fig.update_layout(
@@ -646,17 +620,22 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
     return fig
 
 
-def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
-    """Create combined FM Matrix scatter plot with both focus groups."""
+def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure:
+    """Create combined FM Matrix scatter plot with both focus groups.
+
+    Args:
+        df_filtered: Filtered customer data to display as points
+        df_population: Full population data for calculating reference lines
+    """
 
     # Determine which focus group column to use (prefer fg1, fallback to fg2)
     fg_column = None
     tier_column = None
 
-    if 'fm_segment_fg1' in df.columns and df['fm_segment_fg1'].notna().any():
+    if 'fm_segment_fg1' in df_filtered.columns and df_filtered['fm_segment_fg1'].notna().any():
         fg_column = 'fm_segment_fg1'
         tier_column = 'fm_tier_fg1'
-    elif 'fm_segment_fg2' in df.columns and df['fm_segment_fg2'].notna().any():
+    elif 'fm_segment_fg2' in df_filtered.columns and df_filtered['fm_segment_fg2'].notna().any():
         fg_column = 'fm_segment_fg2'
         tier_column = 'fm_tier_fg2'
 
@@ -671,14 +650,15 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
         )
         return fig
 
-    # Filter to only rows with FM segment data
-    df_with_fm = df[df[fg_column].notna()].copy()
+    # Filter to only rows with FM segment data for DISPLAY
+    df_with_fm = df_filtered[df_filtered[fg_column].notna()].copy()
 
-    # Calculate medians and 90th percentiles
-    freq_median = df_with_fm['Frequency'].median()
-    mon_median = df_with_fm['Monetary'].median()
-    freq_p90 = df_with_fm['Frequency'].quantile(0.90)
-    mon_p90 = df_with_fm['Monetary'].quantile(0.90)
+    # Calculate medians and 90th percentiles from POPULATION (always constant)
+    df_population_fm = df_population[df_population[fg_column].notna()]
+    freq_median = df_population_fm['Frequency'].median()
+    mon_median = df_population_fm['Monetary'].median()
+    freq_p90 = df_population_fm['Frequency'].quantile(0.90)
+    mon_p90 = df_population_fm['Monetary'].quantile(0.90)
 
     # Define colors using custom palette
     segment_colors = {
@@ -691,9 +671,9 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
 
     fig = go.Figure()
 
-    # Add quadrant backgrounds
-    max_freq = df_with_fm['Frequency'].max() * 1.05
-    max_mon = df_with_fm['Monetary'].max() * 1.05
+    # Add quadrant backgrounds using population data for consistent ranges
+    max_freq = df_population_fm['Frequency'].max() * 1.05
+    max_mon = df_population_fm['Monetary'].max() * 1.05
 
     # Champions quadrant highlight (using Champions color)
     fig.add_shape(type="rect",
@@ -769,9 +749,9 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
                     text=[f"Customer {row['Loyalty#']}" for _, row in segment_data.iterrows()]
                 ))
 
-    # Calculate label positions in corners of quadrants
-    min_freq = df_with_fm['Frequency'].min()
-    min_mon = df_with_fm['Monetary'].min()
+    # Calculate label positions in corners of quadrants using population ranges
+    min_freq = df_population_fm['Frequency'].min()
+    min_mon = df_population_fm['Monetary'].min()
 
     # Position labels in corners
     # Champions - bottom left corner of its quadrant
@@ -831,14 +811,18 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
             gridcolor='#d1d5db',
             tickfont=dict(color='#065f46'),
             showgrid=True,
-            zeroline=False
+            zeroline=False,
+            range=[0, max_freq],
+            fixedrange=True
         ),
         yaxis=dict(
             title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#047857')),
             gridcolor='#d1d5db',
             tickfont=dict(color='#065f46'),
             showgrid=True,
-            zeroline=False
+            zeroline=False,
+            range=[0, max_mon],
+            fixedrange=True
         ),
         paper_bgcolor='#ffffff',
         plot_bgcolor='#f9fafb',
@@ -856,20 +840,16 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure:
+def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
     """
     Create Sankey diagram showing how selected customers are distributed across
-    behavioral clusters and FM segments compared to the overall population.
+    behavioral clusters and FM segments.
     """
-    
-    # Determine which FM column to use
-    fg_column = None
-    if 'fm_segment_fg1' in df_selected.columns and df_selected['fm_segment_fg1'].notna().any():
-        fg_column = 'fm_segment_fg1'
-    elif 'fm_segment_fg2' in df_selected.columns and df_selected['fm_segment_fg2'].notna().any():
-        fg_column = 'fm_segment_fg2'
-    
-    if fg_column is None:
+
+    # Always use fm_segment_combined
+    fg_column = 'fm_segment_combined'
+
+    if fg_column not in df_selected.columns:
         # Return empty figure if no FM data
         fig = go.Figure()
         fig.update_layout(
@@ -878,70 +858,43 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd
             height=400
         )
         return fig
-    
+
     # Filter to customers with FM segments
     df_sel_fm = df_selected[df_selected[fg_column].notna()].copy()
-    df_pop_fm = df_population[df_population[fg_column].notna()].copy()
-    
+
     # Create flow data: Behavioral Cluster -> FM Segment
-    cluster_to_fm_selected = df_sel_fm.groupby(['cluster_name', fg_column]).size()
-    cluster_to_fm_population = df_pop_fm.groupby(['cluster_name', fg_column]).size()
-    
+    cluster_to_fm = df_sel_fm.groupby(['cluster_name', fg_column]).size()
+
     # Create nodes
-    clusters = sorted(df_pop_fm['cluster_name'].unique())
-    fm_segments = sorted(df_pop_fm[fg_column].unique())
-    
+    clusters = sorted(df_sel_fm['cluster_name'].unique())
+    fm_segments = sorted(df_sel_fm[fg_column].unique())
+
     # Node list: [clusters, fm_segments]
     node_labels = clusters + fm_segments
-    
+
     # Create indices
     cluster_indices = {name: i for i, name in enumerate(clusters)}
     fm_indices = {name: i + len(clusters) for i, name in enumerate(fm_segments)}
-    
-    # Build links for selected customers
-    sources_sel = []
-    targets_sel = []
-    values_sel = []
-    
-    for (cluster, fm_seg), count in cluster_to_fm_selected.items():
-        sources_sel.append(cluster_indices[cluster])
-        targets_sel.append(fm_indices[fm_seg])
-        values_sel.append(count)
-    
-    # Build links for population (for comparison values)
-    population_flows = {}
-    for (cluster, fm_seg), count in cluster_to_fm_population.items():
-        population_flows[(cluster, fm_seg)] = count
-    
-    # Calculate percentage representation
+
+    # Build links
+    sources = []
+    targets = []
+    values = []
     hover_texts = []
-    for i in range(len(sources_sel)):
-        cluster_idx = sources_sel[i]
-        fm_idx = targets_sel[i]
-        cluster_name = clusters[cluster_idx]
-        fm_name = fm_segments[fm_idx - len(clusters)]
-        
-        sel_count = values_sel[i]
-        pop_count = population_flows.get((cluster_name, fm_name), 0)
-        
-        if pop_count > 0:
-            percentage = (sel_count / pop_count) * 100
-            hover_texts.append(
-                f"{cluster_name} → {fm_name}<br>"
-                f"Selected: {sel_count:,} customers<br>"
-                f"Population: {pop_count:,} customers<br>"
-                f"Representation: {percentage:.1f}%"
-            )
-        else:
-            hover_texts.append(
-                f"{cluster_name} → {fm_name}<br>"
-                f"Selected: {sel_count:,} customers"
-            )
-    
+
+    for (cluster, fm_seg), count in cluster_to_fm.items():
+        sources.append(cluster_indices[cluster])
+        targets.append(fm_indices[fm_seg])
+        values.append(count)
+        hover_texts.append(
+            f"{cluster} → {fm_seg}<br>"
+            f"Customers: {count:,}"
+        )
+
     # Define colors for links (based on behavioral cluster)
     link_colors = []
-    for src_idx in sources_sel:
-        cluster_id = [k for k, v in CLUSTER_CONFIG.items() 
+    for src_idx in sources:
+        cluster_id = [k for k, v in CLUSTER_CONFIG.items()
                      if v['name'] == clusters[src_idx]][0]
         cluster_color = CLUSTER_CONFIG[cluster_id]['color']
         # Add transparency
@@ -950,18 +903,18 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd
             link_colors.append(f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, 0.4)')
         else:
             link_colors.append(cluster_color)
-    
+
     # Node colors
     node_colors = []
     for cluster in clusters:
         cluster_id = [k for k, v in CLUSTER_CONFIG.items() if v['name'] == cluster][0]
         node_colors.append(CLUSTER_CONFIG[cluster_id]['color'])
-    
+
     # FM segment colors using custom palette
     fm_colors = [CUSTOM_HEX[3], CUSTOM_HEX[2], CUSTOM_HEX[1], CUSTOM_HEX[4]]
     for i in range(len(fm_segments)):
         node_colors.append(fm_colors[i % len(fm_colors)])
-    
+
     # Create Sankey diagram
     fig = go.Figure(data=[go.Sankey(
         node=dict(
@@ -971,23 +924,23 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd
             label=node_labels,
             color=node_colors,
             customdata=[f"n={df_sel_fm[df_sel_fm['cluster_name']==c].shape[0]:,}" if c in clusters
-                       else f"n={df_sel_fm[df_sel_fm[fg_column]==c].shape[0]:,}" 
+                       else f"n={df_sel_fm[df_sel_fm[fg_column]==c].shape[0]:,}"
                        for c in node_labels],
             hovertemplate='%{label}<br>%{customdata}<extra></extra>'
         ),
         link=dict(
-            source=sources_sel,
-            target=targets_sel,
-            value=values_sel,
+            source=sources,
+            target=targets,
+            value=values,
             color=link_colors,
             customdata=hover_texts,
             hovertemplate='%{customdata}<extra></extra>'
         )
     )])
-    
+
     fig.update_layout(
         title=dict(
-            text=f"Customer Journey: Behavioral Cluster → FM Segment<br><sub>Selected: {len(df_sel_fm):,} | Population: {len(df_pop_fm):,}</sub>",
+            text="Customer Journey: Behavioral Cluster → FM Segment",
             font=dict(color='#047857', size=14)
         ),
         font=dict(size=11, color='#1f2937'),
@@ -996,11 +949,9 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd
         height=500,
         margin=dict(l=10, r=10, t=60, b=10)
     )
-    
+
     return fig
 
-
-# --- Main App ---
 
 def main():
     # Load data
@@ -1171,8 +1122,8 @@ def main():
     # ==================== MAIN HEADER ====================
     st.markdown("""
     <div style='text-align: center; padding: 20px 0;'>
-        <h1 style='font-size: 2.5rem; margin: 0;'>AIAI Customer Segmentation Strategy</h1>
-        <p style='color: #059669; font-size: 1.1rem; margin-top: 10px;'>Behavioral Clustering & Value Analysis | Group 80</p>
+    <h1 style='font-size: 2.5rem; margin: 0; color: #00411E;'>AIAI Customer Segmentation Strategy</h1>
+        <p style='color: #00411E; font-size: 1.1rem; margin-top: 10px;'>Behavioral Clustering & Value Analysis | Group 80</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1180,10 +1131,22 @@ def main():
 
     # ==================== ROW 1: 3D VISUALIZATION ====================
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>3D Customer Landscape</h3></div>", unsafe_allow_html=True)
+    
+    # Add description paragraph
+    st.markdown("""
+    <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
+        This 3D visualization maps customers in behavioral space using Principal Component Analysis (PCA), 
+        which transforms four key behavioral metrics—Redemption Frequency, Companion Flight Ratio, Flight Regularity, 
+        and Distance Variability—into three principal components: PC1 (Engagement Axis), PC2 (Travel Structure Axis), 
+        and PC3 (Travel Consistency Axis). Each point represents a customer, colored by their behavioral cluster, 
+        revealing natural groupings based on engagement and travel patterns.
+    </div>
+    """, unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
+        st.markdown("#### 3D Customer Clusters in PCA Space")
         fig_3d = create_3d_universe(df_filtered)
-        st.plotly_chart(fig_3d, width='stretch', config={'displaylogo': False})
+        st.plotly_chart(fig_3d, use_container_width=True, config={'displaylogo': False})
     else:
         st.warning("No customers match the current filters. Please adjust your selection.")
 
@@ -1192,8 +1155,20 @@ def main():
     # ==================== ROW 2: FM MATRIX SEGMENTATION ====================
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
 
+    # Add description paragraph
+    st.markdown("""
+    <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
+    This scatter plot segments customers using Frequency-Monetary analysis based on 2021 flight activity. 
+    Customers are positioned by <strong>Frequency</strong> (average flights per active month) and <strong>Monetary</strong> 
+    (average distance per active month). Median-split thresholds (dashed lines) create four segments: <strong>Champions</strong> 
+    (high frequency & distance), <strong>Frequent Flyers</strong> (high frequency, lower distance), <strong>Premium Occasional</strong> 
+    (lower frequency, high distance), and <strong>At Risk</strong> (low frequency & distance). The top 10% of Champions are 
+    marked as <strong>Elite</strong>—the highest-value retention targets.
+</div>
+""", unsafe_allow_html=True)
+
     if len(df_filtered) > 0:
-        fig_fm = create_fm_matrix_combined(df_filtered)
+        fig_fm = create_fm_matrix_combined(df_filtered, df_full)
         st.plotly_chart(fig_fm, width='stretch', config={'displaylogo': False})
     else:
         st.warning("No customers match the current filters. Please adjust your selection.")
@@ -1201,14 +1176,26 @@ def main():
     st.markdown("---")
 
     # ==================== ROW 3: COMPARATIVE ANALYSIS ====================
-    st.markdown("<div class='section-header'><h3 style='margin: 0;'>Comparative Analysis: Selected vs Population</h3></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'><h3 style='margin: 0;'>Comparative Analysis: Deep-Dive</h3></div>", unsafe_allow_html=True)
+
+    # Add description paragraph
+    st.markdown("""
+    <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
+    These visualizations provide deeper insights into segment composition and behavior-to-value alignment. 
+    The <strong>Segment Migration Flow</strong> Sankey diagram reveals how customers from the five behavioral 
+    clusters distribute across FM value segments (Champions, Frequent Flyer, Premium Occasional, At Risk), 
+    with flow width representing customer volume. The <strong>Demographic Composition</strong> chart displays 
+    how demographic attributes—Education, Gender, Marital Status, and Income Bracket—vary across behavioral 
+    clusters, enabling targeted profiling for each segment.
+</div>
+""", unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
         persona_col1, persona_col2 = st.columns(2)
 
         with persona_col1:
             st.markdown("#### Segment Migration Flow")
-            fig_sankey = create_segment_migration_sankey(df_filtered, df_full)
+            fig_sankey = create_segment_migration_sankey(df_filtered)
             st.plotly_chart(fig_sankey, width='stretch', config={'displayModeBar': False})
 
         with persona_col2:
