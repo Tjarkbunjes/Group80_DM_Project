@@ -574,7 +574,7 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
 
 
 def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure:
-    """Create combined FM Matrix scatter plot with both focus groups.
+    """Create combined FM Matrix scatter plot colored by behavioral clusters.
 
     Args:
         df_filtered: Filtered customer data to display as points
@@ -583,7 +583,6 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
 
     # Use the combined column directly
     fg_column = 'fm_segment_combined'
-    tier_column = 'fm_tier_combined'
 
     if fg_column not in df_filtered.columns:
         # Return empty figure if no FM data
@@ -606,27 +605,18 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
     freq_p90 = df_population_fm['Frequency'].quantile(0.90)
     mon_p90 = df_population_fm['Monetary'].quantile(0.90)
 
-    # Define colors using custom palette
-    segment_colors = {
-        'Champions': CUSTOM_HEX[3],      # #45AF28 - Bright green
-        'Frequent Flyer': CUSTOM_HEX[1], # #00622D - Dark green
-        'Premium Occasional': CUSTOM_HEX[2], # #00823C - Medium green
-        'At Risk': CUSTOM_HEX[4]         # #6BCF5D - Light green
-    }
-    elite_color = CUSTOM_HEX[0]  # #00411E - Darkest green for Elite
-
     fig = go.Figure()
 
     # Add quadrant backgrounds using population data for consistent ranges
     max_freq = df_population_fm['Frequency'].max() * 1.05
     max_mon = df_population_fm['Monetary'].max() * 1.05
 
-    # Champions quadrant highlight (using Champions color)
+    # Champions quadrant highlight (light gray)
     fig.add_shape(type="rect",
         x0=freq_median, x1=max_freq, y0=mon_median, y1=max_mon,
         fillcolor='rgba(69, 175, 40, 0.08)', line=dict(width=0), layer='below')
 
-    # Elite zone highlight (using Elite color)
+    # Elite zone highlight (darker gray)
     fig.add_shape(type="rect",
         x0=freq_p90, x1=max_freq, y0=mon_p90, y1=max_mon,
         fillcolor='rgba(0, 65, 30, 0.15)', line=dict(width=0), layer='below')
@@ -635,65 +625,34 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
     fig.add_hline(y=mon_median, line_dash="dash", line_color="#313131", line_width=2, opacity=0.7)
     fig.add_vline(x=freq_median, line_dash="dash", line_color="#313131", line_width=2, opacity=0.7)
 
-    # Plot segments
-    for segment in ['At Risk', 'Premium Occasional', 'Frequent Flyer', 'Champions']:
-        segment_data = df_with_fm[df_with_fm[fg_column] == segment]
+    # Plot by behavioral cluster instead of FM segment
+    # Get unique behavioral clusters present in the data
+    behavioral_clusters = sorted(df_with_fm['Behavioral_Cluster'].dropna().unique())
 
-        if segment == 'Champions':
-            # Separate Elite from Champions
-            elite_data = segment_data[segment_data[tier_column] == 'Elite']
-            non_elite_data = segment_data[segment_data[tier_column] != 'Elite']
+    for cluster_id in behavioral_clusters:
+        cluster_data = df_with_fm[df_with_fm['Behavioral_Cluster'] == cluster_id]
 
-            # Plot non-Elite Champions
-            if len(non_elite_data) > 0:
-                fig.add_trace(go.Scatter(
-                    x=non_elite_data['Frequency'],
-                    y=non_elite_data['Monetary'],
-                    mode='markers',
-                    name=f'Champions (n={len(non_elite_data):,})',
-                    marker=dict(
-                        size=8,
-                        color=segment_colors[segment],
-                        opacity=0.6,
-                        line=dict(color='white', width=0.5)
-                    ),
-                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
-                    text=[f"Customer {row['Loyalty#']}" for _, row in non_elite_data.iterrows()]
-                ))
+        # Get cluster info from CLUSTER_CONFIG
+        cluster_info = CLUSTER_CONFIG.get(cluster_id, {})
+        cluster_name = cluster_info.get('name', f'Cluster {cluster_id}')
+        cluster_color = cluster_info.get('color', '#6b7280')
 
-            # Plot Elite with distinct marker
-            if len(elite_data) > 0:
-                fig.add_trace(go.Scatter(
-                    x=elite_data['Frequency'],
-                    y=elite_data['Monetary'],
-                    mode='markers',
-                    name=f'Elite (n={len(elite_data):,})',
-                    marker=dict(
-                        size=10,
-                        color=elite_color,
-                        opacity=0.8,
-                        symbol='diamond',
-                        line=dict(color='white', width=0.8)
-                    ),
-                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
-                    text=[f"Customer {row['Loyalty#']}" for _, row in elite_data.iterrows()]
-                ))
-        else:
-            if len(segment_data) > 0:
-                fig.add_trace(go.Scatter(
-                    x=segment_data['Frequency'],
-                    y=segment_data['Monetary'],
-                    mode='markers',
-                    name=f'{segment} (n={len(segment_data):,})',
-                    marker=dict(
-                        size=8,
-                        color=segment_colors[segment],
-                        opacity=0.6,
-                        line=dict(color='white', width=0.5)
-                    ),
-                    hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<extra></extra>',
-                    text=[f"Customer {row['Loyalty#']}" for _, row in segment_data.iterrows()]
-                ))
+        if len(cluster_data) > 0:
+            fig.add_trace(go.Scatter(
+                x=cluster_data['Frequency'],
+                y=cluster_data['Monetary'],
+                mode='markers',
+                name=f'{cluster_name} (n={len(cluster_data):,})',
+                marker=dict(
+                    size=8,
+                    color=cluster_color,
+                    opacity=0.7,
+                    line=dict(color='white', width=0.5)
+                ),
+                hovertemplate='<b>%{text}</b><br>Frequency: %{x:.2f}<br>Monetary: %{y:.2f}<br>FM Segment: %{customdata}<extra></extra>',
+                text=[f"Customer {row['Loyalty#']}" for _, row in cluster_data.iterrows()],
+                customdata=cluster_data[fg_column].tolist()
+            ))
 
     # Calculate label positions in corners of quadrants using population ranges
     min_freq = df_population_fm['Frequency'].min()
@@ -770,6 +729,11 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
         plot_bgcolor='#f9fafb',
         font=dict(color='#1f2937'),
         legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='center',
+            x=0.5,
             bgcolor='rgba(255, 255, 255, 0.9)',
             bordercolor='#d1d5db',
             borderwidth=1,
@@ -777,7 +741,7 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
         ),
         hovermode='closest',
         height=500,
-        margin=dict(l=50, r=20, t=20, b=50)  # CHANGED: Reduced top margin from default
+        margin=dict(l=50, r=20, t=60, b=50)  # Increased top margin for legend
     )
 
     return fig
