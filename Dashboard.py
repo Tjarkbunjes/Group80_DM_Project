@@ -70,29 +70,29 @@ st.markdown("""
 
     /* Checkbox styling - GREEN - Multiple approaches for compatibility */
     [data-testid="stSidebar"] input[type="checkbox"] {
-        accent-color: #10b981 !important;
+        accent-color: #45AF28 !important;
         cursor: pointer !important;
     }
 
     /* For browsers that don't support accent-color */
     [data-testid="stSidebar"] input[type="checkbox"]:checked {
-        background-color: #10b981 !important;
-        border-color: #10b981 !important;
+        background-color: #45AF28 !important;
+        border-color: #45AF28 !important;
     }
 
     /* Streamlit specific checkbox styling */
     [data-testid="stSidebar"] input[type="checkbox"]:checked::before {
-        background-color: #10b981 !important;
+        background-color: #45AF28 !important;
     }
 
     /* Alternative Streamlit checkbox selectors */
     [data-testid="stCheckbox"] input[type="checkbox"] {
-        accent-color: #10b981 !important;
+        accent-color: #45AF28 !important;
     }
 
     [data-testid="stCheckbox"] input[type="checkbox"]:checked {
-        background-color: #10b981 !important;
-        border-color: #10b981 !important;
+        background-color: #45AF28 !important;
+        border-color: #45AF28 !important;
     }
 
     /* The checkmark itself */
@@ -118,7 +118,7 @@ st.markdown("""
     }
 
     [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-        color: #10b981 !important;
+        color: #00622D !important;
         font-weight: 600 !important;
         font-size: 16px !important;
         background-color: #f9fafb !important;
@@ -336,31 +336,36 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- Custom Color Palette (from Clustering Code) ---
+CUSTOM_HEX = [
+    "#00411E", "#00622D", "#00823C", "#45AF28", "#6BCF5D", "#D5E6D0", "#212121", "#313131", "#595959", "#909090"
+]
+
 # --- Behavioral Cluster Configuration (Group 80 Green Palette) ---
 CLUSTER_CONFIG = {
     0: {
         'name': 'Disengaged Solo',
-        'color': '#ef4444',  # Red - Low engagement
+        'color': CUSTOM_HEX[8],  # #595959 - Gray for low engagement
         'desc': 'Low engagement, infrequent redemption, solo travelers.'
     },
     1: {
         'name': 'Business Commuters',
-        'color': '#3b82f6',  # Blue - Regular but transactional
+        'color': CUSTOM_HEX[1],  # #00622D - Dark green
         'desc': 'Regular solo business travelers, moderate engagement.'
     },
     2: {
         'name': 'Engaged Loyalists',
-        'color': '#10b981',  # Primary Green - High value
+        'color': CUSTOM_HEX[3],  # #45AF28 - Bright green - High value
         'desc': 'Active, consistent, high redemption, loyal base.'
     },
     3: {
         'name': 'Family Travelers',
-        'color': '#f59e0b',  # Amber - Companion-based
+        'color': CUSTOM_HEX[2],  # #00823C - Medium green
         'desc': 'High companion ratio, vacation-oriented patterns.'
     },
     4: {
         'name': 'Explorers',
-        'color': '#8b5cf6',  # Purple - Variable behavior
+        'color': CUSTOM_HEX[4],  # #6BCF5D - Light green
         'desc': 'High distance variability, adventurous patterns.'
     }
 }
@@ -378,8 +383,27 @@ def load_data():
     df['Province or State'] = df['Province or State'].fillna('Unknown')
     df['fm_segment_fg1'] = df['fm_segment_fg1'].fillna('')
 
-    # Add cluster names
+    # Add behavioral cluster names
     df['cluster_name'] = df['Behavioral_Cluster'].map(lambda x: CLUSTER_CONFIG.get(x, {}).get('name', f'Cluster {x}'))
+
+    # Add demographic cluster names
+    demographic_cluster_mapping = {
+        0: 'Common Regions, Higher-Income Higher-Education',
+        1: 'Lower-Income Lower-Education',
+        2: 'Rare Regions, Higher-Education'
+    }
+    df['demographic_cluster_name'] = df['Demographic_Cluster'].map(demographic_cluster_mapping)
+
+    # Create income bin names
+    def bin_income(income):
+        if income <= 20000:
+            return 'Low Income (≤$20k)'
+        elif income <= 70000:
+            return 'Medium Income ($20k-$70k)'
+        else:
+            return 'High Income (>$70k)'
+
+    df['Income_Bin_Name'] = df['Income'].apply(bin_income)
 
     return df
 
@@ -415,11 +439,17 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
                   f"• Redemption: {row['redemption_frequency']:.3f}<br>"
                   f"• Companion Ratio: {row['companion_flight_ratio']:.3f}<br>"
                   f"• Flight Regularity: {row['flight_regularity']:.3f}<br>"
+                  f"• Distance Variability: {row['distance_variability']:.3f}<br>"
                   f"━━━━━━━━━━━━<br>"
                   f"<b>Demographics:</b><br>"
-                  f"• Income: ${row['Income']:,.0f}<br>"
+                  f"• Province: {row['Province or State']}<br>"
+                  f"• City: {row['City']}<br>"
+                  f"• FSA: {row['FSA']}<br>"
+                  f"• Gender: {row['Gender']}<br>"
                   f"• Education: {row['Education']}<br>"
-                  f"• Province: {row['Province or State']}"
+                  f"• Location Code: {row['Location Code']}<br>"
+                  f"• Income: ${row['Income']:,.0f}<br>"
+                  f"• Marital Status: {row['Marital Status']}"
                   for _, row in cluster_df.iterrows()],
             hoverinfo='text',
             showlegend=True
@@ -567,7 +597,8 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
 
     fig = go.Figure()
 
-    colors_demo = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5']
+    # Use custom green palette for demographic bars
+    colors_demo = [CUSTOM_HEX[3], CUSTOM_HEX[2], CUSTOM_HEX[1], CUSTOM_HEX[4], CUSTOM_HEX[5]]
 
     for i, attr_val in enumerate(cross_tab.columns):
         fig.add_trace(go.Bar(
@@ -649,14 +680,14 @@ def create_fm_matrix_combined(df: pd.DataFrame) -> go.Figure:
     freq_p90 = df_with_fm['Frequency'].quantile(0.90)
     mon_p90 = df_with_fm['Monetary'].quantile(0.90)
 
-    # Define colors (matching Jupyter notebook colors)
+    # Define colors using custom palette
     segment_colors = {
-        'Champions': '#45AF28',      # Light green
-        'Frequent Flyer': '#00622D', # Dark green
-        'Premium Occasional': '#00823C', # Medium green
-        'At Risk': '#6BCF5D'         # Lighter green
+        'Champions': CUSTOM_HEX[3],      # #45AF28 - Bright green
+        'Frequent Flyer': CUSTOM_HEX[1], # #00622D - Dark green
+        'Premium Occasional': CUSTOM_HEX[2], # #00823C - Medium green
+        'At Risk': CUSTOM_HEX[4]         # #6BCF5D - Light green
     }
-    elite_color = '#00411E'  # Darkest green for Elite
+    elite_color = CUSTOM_HEX[0]  # #00411E - Darkest green for Elite
 
     fig = go.Figure()
 
@@ -926,8 +957,8 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame, df_population: pd
         cluster_id = [k for k, v in CLUSTER_CONFIG.items() if v['name'] == cluster][0]
         node_colors.append(CLUSTER_CONFIG[cluster_id]['color'])
     
-    # FM segment colors (green shades)
-    fm_colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0']
+    # FM segment colors using custom palette
+    fm_colors = [CUSTOM_HEX[3], CUSTOM_HEX[2], CUSTOM_HEX[1], CUSTOM_HEX[4]]
     for i in range(len(fm_segments)):
         node_colors.append(fm_colors[i % len(fm_colors)])
     
@@ -983,6 +1014,26 @@ def main():
     with st.sidebar:
         st.markdown("## Filters")
 
+        # --- VALUE-BASED FILTERS ---
+        with st.expander("Value-Based Filters", expanded=False):
+            # Frequency Range
+            freq_range = st.slider(
+                "Frequency (Flights per Active Month)",
+                min_value=float(df_full['Frequency'].min()),
+                max_value=float(df_full['Frequency'].max()),
+                value=(float(df_full['Frequency'].min()), float(df_full['Frequency'].max())),
+                step=0.1
+            )
+
+            # Monetary Range
+            monetary_range = st.slider(
+                "Monetary (Distance per Active Month)",
+                min_value=float(df_full['Monetary'].min()),
+                max_value=float(df_full['Monetary'].max()),
+                value=(float(df_full['Monetary'].min()), float(df_full['Monetary'].max())),
+                step=10.0
+            )
+
         # --- BEHAVIORAL FILTERS ---
         with st.expander("Behavioral Filters", expanded=True):
 
@@ -1028,24 +1079,6 @@ def main():
                 min_value=float(df_full['distance_variability'].min()),
                 max_value=float(df_full['distance_variability'].max()),
                 value=(float(df_full['distance_variability'].min()), float(df_full['distance_variability'].max())),
-                step=0.01
-            )
-
-            # Average Distance per Flight
-            avg_distance_range = st.slider(
-                "Avg Distance per Flight",
-                min_value=float(df_full['avg_distance_per_flight'].min()),
-                max_value=float(df_full['avg_distance_per_flight'].max()),
-                value=(float(df_full['avg_distance_per_flight'].min()), float(df_full['avg_distance_per_flight'].max())),
-                step=10.0
-            )
-
-            # Peak Season Sin
-            peak_season_range = st.slider(
-                "Peak Season (Sin)",
-                min_value=float(df_full['peak_season_sin'].min()),
-                max_value=float(df_full['peak_season_sin'].max()),
-                value=(float(df_full['peak_season_sin'].min()), float(df_full['peak_season_sin'].max())),
                 step=0.01
             )
 
@@ -1099,48 +1132,6 @@ def main():
                     if st.checkbox(location, value=True, key=f"loc_{location}"):
                         selected_location.append(location)
 
-        # --- VALUE-BASED FILTERS ---
-        with st.expander("Value-Based Filters", expanded=False):
-            # Focus Group Selection
-            with st.expander("**Focus Groups**", expanded=False):
-                focus_group_options = []
-                if 'fm_segment_fg1' in df_full.columns:
-                    focus_group_options.append('Focus Group 1: Loyalty Members | Active')
-                if 'fm_segment_fg2' in df_full.columns:
-                    focus_group_options.append('Focus Group 2: Ex-Loyalty Members | Active')
-
-                selected_focus_groups = []
-                for fg in focus_group_options:
-                    if st.checkbox(fg, value=True, key=f"fg_{fg}"):
-                        selected_focus_groups.append(fg)
-
-            # Income Range
-            income_range = st.slider(
-                "Income Range",
-                min_value=0,
-                max_value=int(df_full['Income'].max()),
-                value=(0, int(df_full['Income'].max())),
-                format="$%d"
-            )
-
-            # Frequency Range
-            freq_range = st.slider(
-                "Frequency (Flights per Active Month)",
-                min_value=float(df_full['Frequency'].min()),
-                max_value=float(df_full['Frequency'].max()),
-                value=(float(df_full['Frequency'].min()), float(df_full['Frequency'].max())),
-                step=0.1
-            )
-
-            # Monetary Range
-            monetary_range = st.slider(
-                "Monetary (Distance per Active Month)",
-                min_value=float(df_full['Monetary'].min()),
-                max_value=float(df_full['Monetary'].max()),
-                value=(float(df_full['Monetary'].min()), float(df_full['Monetary'].max())),
-                step=10.0
-            )
-
         st.divider()
 
     # ==================== APPLY FILTERS ====================
@@ -1158,11 +1149,7 @@ def main():
         (df_filtered['companion_flight_ratio'] >= companion_range[0]) &
         (df_filtered['companion_flight_ratio'] <= companion_range[1]) &
         (df_filtered['distance_variability'] >= distance_var_range[0]) &
-        (df_filtered['distance_variability'] <= distance_var_range[1]) &
-        (df_filtered['avg_distance_per_flight'] >= avg_distance_range[0]) &
-        (df_filtered['avg_distance_per_flight'] <= avg_distance_range[1]) &
-        (df_filtered['peak_season_sin'] >= peak_season_range[0]) &
-        (df_filtered['peak_season_sin'] <= peak_season_range[1])
+        (df_filtered['distance_variability'] <= distance_var_range[1])
     ]
 
     # Apply demographic filters
@@ -1175,22 +1162,11 @@ def main():
 
     # Apply value-based filters
     df_filtered = df_filtered[
-        (df_filtered['Income'] >= income_range[0]) &
-        (df_filtered['Income'] <= income_range[1]) &
         (df_filtered['Frequency'] >= freq_range[0]) &
         (df_filtered['Frequency'] <= freq_range[1]) &
         (df_filtered['Monetary'] >= monetary_range[0]) &
         (df_filtered['Monetary'] <= monetary_range[1])
     ]
-
-    # Apply focus group filter
-    if selected_focus_groups:
-        focus_group_mask = pd.Series([False] * len(df_filtered), index=df_filtered.index)
-        if 'Focus Group 1: Loyalty Members | Active' in selected_focus_groups:
-            focus_group_mask |= df_filtered['fm_segment_fg1'].notna()
-        if 'Focus Group 2: Ex-Loyalty Members | Active' in selected_focus_groups:
-            focus_group_mask |= df_filtered['fm_segment_fg2'].notna()
-        df_filtered = df_filtered[focus_group_mask]
 
     # ==================== MAIN HEADER ====================
     st.markdown("""
@@ -1237,11 +1213,19 @@ def main():
 
         with persona_col2:
             st.markdown("#### Demographic Composition")
-            demo_attribute = st.selectbox(
+            # Map display names to column names
+            demo_options_map = {
+                'Education': 'Education',
+                'Gender': 'Gender',
+                'Marital Status': 'Marital Status',
+                'Income Bracket': 'Income_Bin_Name'
+            }
+            demo_display = st.selectbox(
                 "Select demographic attribute",
-                options=['Education', 'Gender', 'Marital Status'],
+                options=list(demo_options_map.keys()),
                 key='demo_split'
             )
+            demo_attribute = demo_options_map[demo_display]
             fig_demo = create_demographic_split(df_filtered, demo_attribute)
             st.plotly_chart(fig_demo, width='stretch', config={'displayModeBar': False})
 
@@ -1251,12 +1235,47 @@ def main():
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>Data Export</h3></div>", unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
-        # Preview table
+        # Define export columns: all filterable columns + cluster assignments
+        export_cols = [
+            'Loyalty#',
+            # FM Segment
+            'fm_segment_combined',
+            # Cluster assignments
+            'Behavioral_Cluster',
+            'cluster_name',
+            'Demographic_Cluster',
+            'demographic_cluster_name',
+            # Value-based filters
+            'Frequency',
+            'Monetary',
+            # Behavioral filters
+            'redemption_frequency',
+            'flight_regularity',
+            'companion_flight_ratio',
+            'distance_variability',
+            # Demographic filters
+            'Province or State',
+            'City',
+            'FSA',
+            'Gender',
+            'Education',
+            'Location Code',
+            'Marital Status'
+        ]
+
+        # Preview table with renamed columns for display
         st.markdown("##### Data Preview (First 10 Records)")
-        preview_cols = ['Loyalty#', 'cluster_name', 'Education', 'Income', 'Province or State',
-                       'redemption_frequency', 'Frequency', 'Monetary', 'Customer Lifetime Value']
+        preview_df = df_filtered[export_cols].head(10).rename(columns={
+            'fm_segment_combined': 'FM Segment',
+            'cluster_name': 'Cluster Name',
+            'demographic_cluster_name': 'Demographic Cluster Description',
+            'redemption_frequency': 'Redemption Frequency',
+            'flight_regularity': 'Flight Regularity',
+            'companion_flight_ratio': 'Companion Flight Ratio',
+            'distance_variability': 'Distance Variability'
+        })
         st.dataframe(
-            df_filtered[preview_cols].head(10),
+            preview_df,
             width='stretch',
             hide_index=True
         )
@@ -1264,7 +1283,7 @@ def main():
         # Export button
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            csv = df_filtered.to_csv(index=False)
+            csv = df_filtered[export_cols].to_csv(index=False)
             st.download_button(
                 label="Download Selected Customers (CSV)",
                 data=csv,
