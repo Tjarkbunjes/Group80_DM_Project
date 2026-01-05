@@ -1218,6 +1218,8 @@ def main():
                 type="primary"
             )
 
+
+
     # Footer
     st.markdown("---")
 if __name__ == "__main__":
