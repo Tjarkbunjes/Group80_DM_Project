@@ -285,7 +285,7 @@ st.markdown("""
     }
 
     h2, h3, h4 {
-        color: #065f46 !important;
+        color: #00411E !important;
     }
 
     /* Metrics cards */
@@ -351,9 +351,9 @@ CUSTOM_HEX = [
 # --- Behavioral Cluster Configuration (Group 80 Green Palette) ---
 CLUSTER_CONFIG = {
     0: {
-        'name': 'Disengaged Solo',
-        'color': '#2ca02c',
-        'desc': 'Low engagement, infrequent redemption, solo travelers.'
+        'name': 'Family Travelers',
+        'color': '#1f77b4',  
+        'desc': 'High companion ratio, vacation-oriented patterns.'
     },
     1: {
         'name': 'Business Commuters',
@@ -361,19 +361,19 @@ CLUSTER_CONFIG = {
         'desc': 'Regular solo business travelers, moderate engagement.'
     },
     2: {
-        'name': 'Engaged Loyalists',
-        'color': '#9467bd', 
-        'desc': 'Active, consistent, high redemption, loyal base.'
+        'name': 'Disengaged Solo',
+        'color': '#2ca02c',
+        'desc': 'Low engagement, infrequent redemption, solo travelers.'
     },
     3: {
-        'name': 'Family Travelers',
-        'color': '#1f77b4',  
-        'desc': 'High companion ratio, vacation-oriented patterns.'
-    },
-    4: {
         'name': 'Explorers',
         'color': '#d62728',
         'desc': 'High distance variability, adventurous patterns.'
+    },
+    4: {
+        'name': 'Engaged Loyalists',
+        'color': '#9467bd', 
+        'desc': 'Active, consistent, high redemption, loyal base.'
     }
 }
 
@@ -382,13 +382,6 @@ CLUSTER_CONFIG = {
 def load_data():
     """Load and prepare customer segmentation data."""
     df = pd.read_csv('data/clustering_data/customer_segmentation_profiles.csv')
-
-    # Handle missing values
-    df['Income'] = df['Income'].fillna(0)
-    df['Education'] = df['Education'].fillna('Unknown')
-    df['City'] = df['City'].fillna('Unknown')
-    df['Province or State'] = df['Province or State'].fillna('Unknown')
-    df['fm_segment_fg1'] = df['fm_segment_fg1'].fillna('')
 
     # Add behavioral cluster names
     df['cluster_name'] = df['Behavioral_Cluster'].map(lambda x: CLUSTER_CONFIG.get(x, {}).get('name', f'Cluster {x}'))
@@ -469,21 +462,21 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         scene=dict(
             xaxis=dict(
-                title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#047857', size=12)),
+                title=dict(text="<b>PC1: Engagement Axis</b>", font=dict(color='#00411E', size=12)),
                 backgroundcolor='#f9fafb',
                 gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
             yaxis=dict(
-                title=dict(text="<b>PC2: Travel Structure Axis</b>", font=dict(color='#047857', size=12)),
+                title=dict(text="<b>PC2: Travel Structure Axis</b>", font=dict(color='#00411E', size=12)),
                 backgroundcolor='#f9fafb',
                 gridcolor='#d1d5eb',
                 showbackground=True,
                 range=axis_range
             ),
             zaxis=dict(
-                title=dict(text="<b>PC3: Travel Consistency Axis</b>", font=dict(color='#047857', size=12)),
+                title=dict(text="<b>PC3: Travel Consistency Axis</b>", font=dict(color='#00411E', size=12)),
                 backgroundcolor='#f9fafb',
                 gridcolor='#d1d5eb',
                 showbackground=True,
@@ -573,7 +566,7 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
     return fig
 
 
-def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure:
+def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure: 
     """Create combined FM Matrix scatter plot colored by behavioral clusters.
 
     Args:
@@ -708,18 +701,18 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
 
     fig.update_layout(
         xaxis=dict(
-            title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#047857')),
+            title=dict(text='<b>Frequency (Flights per Active Month)</b>', font=dict(color='#00411E')),
             gridcolor='#d1d5db',
-            tickfont=dict(color='#065f46'),
+            tickfont=dict(color='#00411E'),
             showgrid=True,
             zeroline=False,
             range=[0, max_freq],
             fixedrange=True
         ),
         yaxis=dict(
-            title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#047857')),
+            title=dict(text='<b>Monetary (Distance per Active Month)</b>', font=dict(color='#00411E')),
             gridcolor='#d1d5db',
-            tickfont=dict(color='#065f46'),
+            tickfont=dict(color='#00411E'),
             showgrid=True,
             zeroline=False,
             range=[0, max_mon],
@@ -793,9 +786,16 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
         sources.append(cluster_indices[cluster])
         targets.append(fm_indices[fm_seg])
         values.append(count)
+
+        # Calculate percentages
+        cluster_total = df_sel_fm[df_sel_fm['cluster_name'] == cluster].shape[0]
+        pct_of_cluster = (count / cluster_total * 100) if cluster_total > 0 else 0
+        pct_of_total = (count / len(df_sel_fm) * 100) if len(df_sel_fm) > 0 else 0
+
         hover_texts.append(
             f"{cluster} → {fm_seg}<br>"
-            f"Customers: {count:,}"
+            f"Customers: {count:,}<br>"
+            f"% of {cluster}: {pct_of_cluster:.1f}%<br>"
         )
 
     # Define colors for links (based on behavioral cluster)
@@ -848,11 +848,11 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         title=dict(
             text="Customer Journey: Behavioral Cluster → FM Segment",
-            font=dict(color='#047857', size=14)
+            font=dict(color='#00411E', size=14)
         ),
-        font=dict(size=11, color='#1f2937'),
+        font=dict(size=11, color='#000000'),
         paper_bgcolor='#ffffff',
-        plot_bgcolor='#f9fafb',
+        plot_bgcolor='#ffffff',
         height=500,
         margin=dict(l=10, r=10, t=60, b=10)
     )
@@ -872,8 +872,29 @@ def main():
     with st.sidebar:
         st.markdown("## Filters")
 
+        # --- FOCUS GROUP FILTER ---
+        st.markdown("#### Focus Group")
+        focus_group_option = st.radio(
+            "Focus Group",
+            options=["All", "Active, Current Loyalty Member", "Active, No Loyalty Member"],
+            index=0,
+            key="focus_group_filter",
+            label_visibility="collapsed"
+        )
+
+        st.divider()
+
         # --- VALUE-BASED FILTERS ---
+        st.markdown("#### Cluster")
         with st.expander("Value-Based Filters", expanded=False):
+            # Value-Based Segments - Using nested expander for dropdown effect
+            with st.expander("**Value-Based Segments**", expanded=False):
+                fm_segment_options = sorted([seg for seg in df_full['fm_segment_combined'].unique() if pd.notna(seg)])
+                selected_fm_segments = []
+                for fm_seg in fm_segment_options:
+                    if st.checkbox(fm_seg, value=True, key=f"fm_{fm_seg}"):
+                        selected_fm_segments.append(fm_seg)
+
             # Frequency Range
             freq_range = st.slider(
                 "Frequency (Flights per Active Month)",
@@ -995,6 +1016,13 @@ def main():
     # ==================== APPLY FILTERS ====================
     df_filtered = df_full.copy()
 
+    # Apply Focus Group filter
+    if focus_group_option == "Active, Current Loyalty Member":
+        df_filtered = df_filtered[df_filtered['Focus_Group'] == 1]
+    elif focus_group_option == "Active, No Loyalty Member":
+        df_filtered = df_filtered[df_filtered['Focus_Group'] == 2]
+    # If "All", no filtering needed (includes both Focus_Group 1 and 2)
+
     # Apply behavioral filters
     selected_cluster_ids = [k for k, v in CLUSTER_CONFIG.items() if v['name'] in selected_segments]
     df_filtered = df_filtered[df_filtered['Behavioral_Cluster'].isin(selected_cluster_ids)]
@@ -1019,6 +1047,10 @@ def main():
     df_filtered = df_filtered[df_filtered['Location Code'].isin(selected_location)]
 
     # Apply value-based filters
+    # Filter by FM segments (only if segments are selected)
+    if selected_fm_segments:
+        df_filtered = df_filtered[df_filtered['fm_segment_combined'].isin(selected_fm_segments)]
+
     df_filtered = df_filtered[
         (df_filtered['Frequency'] >= freq_range[0]) &
         (df_filtered['Frequency'] <= freq_range[1]) &
@@ -1043,8 +1075,8 @@ def main():
     st.markdown("""
     <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
         This 3D visualization maps customers in behavioral space using Principal Component Analysis (PCA), 
-        which transforms four key behavioral metrics—Redemption Frequency, Companion Flight Ratio, Flight Regularity, 
-        and Distance Variability—into three principal components: PC1 (Engagement Axis), PC2 (Travel Structure Axis), 
+        which transforms four key behavioral metrics (Redemption Frequency, Companion Flight Ratio, Flight Regularity, 
+        and Distance Variability) into three principal components: PC1 (Engagement Axis), PC2 (Travel Structure Axis), 
         and PC3 (Travel Consistency Axis). Each point represents a customer, colored by their behavioral cluster, 
         revealing natural groupings based on engagement and travel patterns.
     </div>
@@ -1090,12 +1122,11 @@ def main():
     <div style='padding: 10px 0; color: #374151; font-size: 0.95rem;'>
     These visualizations provide deeper insights into segment composition and behavior-to-value alignment. 
     The <strong>Segment Migration Flow</strong> Sankey diagram reveals how customers from the five behavioral 
-    clusters distribute across FM value segments (Champions, Frequent Flyer, Premium Occasional, At Risk), 
-    with flow width representing customer volume. The <strong>Demographic Composition</strong> chart displays 
-    how demographic attributes—Education, Gender, Marital Status, and Income Bracket—vary across behavioral 
+    clusters distribute across FM value segments, with flow width representing customer volume. The <strong>Demographic Composition</strong> chart displays 
+    how demographic attributes (Education, Gender, Marital Status, and Income Bracket) vary across behavioral 
     clusters, enabling targeted profiling for each segment.
-</div>
-""", unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
         persona_col1, persona_col2 = st.columns(2)
@@ -1189,13 +1220,5 @@ def main():
 
     # Footer
     st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center; color: #047857; padding: 20px 0;'>
-        <p style='margin: 0;'><strong>AIAI Strategic Explorer</strong> | Amazing International Airlines Inc.</p>
-        <p style='font-size: 0.8rem; margin-top: 5px; color: #059669;'>Powered by Behavioral Clustering (SOM + K-Means) | PCA Visualization | Group 80 Analytics</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-
 if __name__ == "__main__":
     main()
