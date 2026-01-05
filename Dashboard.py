@@ -891,9 +891,15 @@ def main():
             with st.expander("**Value-Based Segments**", expanded=False):
                 fm_segment_options = sorted([seg for seg in df_full['fm_segment_combined'].unique() if pd.notna(seg)])
                 selected_fm_segments = []
+                champions_elite_only = False
+
                 for fm_seg in fm_segment_options:
                     if st.checkbox(fm_seg, value=True, key=f"fm_{fm_seg}"):
                         selected_fm_segments.append(fm_seg)
+
+                    # Add Champions (only Elite) right after Champions
+                    if fm_seg == "Champions":
+                        champions_elite_only = st.checkbox("Champions (only Elite)", value=False, key="fm_champions_elite_only")
 
             # Frequency Range
             freq_range = st.slider(
@@ -1025,7 +1031,8 @@ def main():
 
     # Apply behavioral filters
     selected_cluster_ids = [k for k, v in CLUSTER_CONFIG.items() if v['name'] in selected_segments]
-    df_filtered = df_filtered[df_filtered['Behavioral_Cluster'].isin(selected_cluster_ids)]
+    if selected_cluster_ids:
+        df_filtered = df_filtered[df_filtered['Behavioral_Cluster'].isin(selected_cluster_ids)]
 
     df_filtered = df_filtered[
         (df_filtered['redemption_frequency'] >= redemption_range[0]) &
@@ -1038,18 +1045,42 @@ def main():
         (df_filtered['distance_variability'] <= distance_var_range[1])
     ]
 
-    # Apply demographic filters
-    df_filtered = df_filtered[df_filtered['Province or State'].isin(selected_provinces)]
-    df_filtered = df_filtered[df_filtered['City'].isin(selected_cities)]
-    df_filtered = df_filtered[df_filtered['FSA'].isin(selected_fsa)]
-    df_filtered = df_filtered[df_filtered['Gender'].isin(selected_gender)]
-    df_filtered = df_filtered[df_filtered['Education'].isin(selected_education)]
-    df_filtered = df_filtered[df_filtered['Location Code'].isin(selected_location)]
+    # Apply demographic filters (only if selections are made)
+    if selected_provinces:
+        df_filtered = df_filtered[df_filtered['Province or State'].isin(selected_provinces)]
+    if selected_cities:
+        df_filtered = df_filtered[df_filtered['City'].isin(selected_cities)]
+    if selected_fsa:
+        df_filtered = df_filtered[df_filtered['FSA'].isin(selected_fsa)]
+    if selected_gender:
+        df_filtered = df_filtered[df_filtered['Gender'].isin(selected_gender)]
+    if selected_education:
+        df_filtered = df_filtered[df_filtered['Education'].isin(selected_education)]
+    if selected_location:
+        df_filtered = df_filtered[df_filtered['Location Code'].isin(selected_location)]
 
     # Apply value-based filters
-    # Filter by FM segments (only if segments are selected)
+    # Build combined FM segment filter (union of selected segments + Champions Elite if checked)
+    fm_filter_conditions = []
+
+    # Add regular FM segments if any are selected
     if selected_fm_segments:
-        df_filtered = df_filtered[df_filtered['fm_segment_combined'].isin(selected_fm_segments)]
+        fm_filter_conditions.append(df_filtered['fm_segment_combined'].isin(selected_fm_segments))
+
+    # Add Champions (only Elite) if selected
+    if champions_elite_only:
+        fm_filter_conditions.append(
+            (df_filtered['fm_segment_combined'] == 'Champions') &
+            (df_filtered['fm_tier_combined'] == 'Elite')
+        )
+
+    # Apply combined filter using OR logic (union)
+    if fm_filter_conditions:
+        # Combine all conditions with OR
+        combined_fm_filter = fm_filter_conditions[0]
+        for condition in fm_filter_conditions[1:]:
+            combined_fm_filter = combined_fm_filter | condition
+        df_filtered = df_filtered[combined_fm_filter]
 
     df_filtered = df_filtered[
         (df_filtered['Frequency'] >= freq_range[0]) &
@@ -1085,7 +1116,7 @@ def main():
     if len(df_filtered) > 0:
         st.markdown("#### 3D Customer Clusters in PCA Space")
         fig_3d = create_3d_universe(df_filtered)
-        st.plotly_chart(fig_3d, use_container_width=True, config={'displaylogo': False})
+        st.plotly_chart(fig_3d, width='stretch', config={'displaylogo': False})
     else:
         st.warning("No customers match the current filters. Please adjust your selection.")
 
