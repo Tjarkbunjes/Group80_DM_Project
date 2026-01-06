@@ -50,29 +50,12 @@ That's it! The dashboard will automatically open in your browser at `http://loca
 The left sidebar provides comprehensive filtering options:
 
 1. **Focus Group**: Filter by customer loyalty status
-   - All customers
-   - Active, Current Loyalty Member
-   - Active, No Loyalty Member
 
 2. **Value-Based Filters**: Filter by FM segments, frequency, and monetary metrics
-   - Value-Based Segments (Champions, Elite, Frequent Flyer, Premium Occasional, At Risk)
-   - Frequency Range (flights per active month)
-   - Monetary Range (distance per active month)
 
 3. **Behavioral Filters**: Filter by customer behavior patterns
-   - Customer Segments (Family Travelers, Business Commuters, Disengaged Solo, Explorers, Engaged Loyalists)
-   - Redemption Frequency
-   - Flight Regularity
-   - Companion Flight Ratio
-   - Distance Variability
 
 4. **Demographic Filters**: Filter by customer demographics
-   - Province/State
-   - City
-   - FSA (Forward Sortation Area)
-   - Gender
-   - Education Level
-   - Location Code
 
 ### Main Visualizations
 
@@ -91,12 +74,12 @@ The left sidebar provides comprehensive filtering options:
 
 ## Project Context
 
-This dashboard is part of Deliverable 2 for the Data Mining course (Group 80), focusing on customer segmentation analysis for Amazing International Airlines Inc. (AIAI). The analysis follows the CRISP-DM framework and provides actionable insights for customer targeting and loyalty program optimization.
+This dashboard is part of Deliverable 2 Options for the Data Mining course (Group 80), focusing on customer segmentation analysis for Amazing International Airlines Inc. (AIAI).
 
 ## Authors
 
 Group 80 - Data Mining Project Team
 
-20250487 - PaulHarnos
-20250489 - Felix Diederichs
-20250505 - Tjark Bunjes
+- 20250487 - PaulHarnos
+- 20250489 - Felix Diederichs
+- 20250505 - Tjark Bunjes
