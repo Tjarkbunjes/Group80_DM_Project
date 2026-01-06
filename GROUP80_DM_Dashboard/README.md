@@ -10,18 +10,7 @@ An interactive Streamlit dashboard for exploring customer segmentation analysis 
 
 Simply click the link above to start exploring the customer segmentation analysis immediately.
 
----
-
-## Features
-
-- **3D Customer Landscape**: Interactive PCA-based visualization of customer behavioral clusters
-- **FM Matrix Analysis**: Frequency-Monetary value segmentation with quadrant-based insights
-- **Segment Migration Flow**: Sankey diagram showing customer distribution across behavioral and value segments
-- **Demographic Composition**: Comparative analysis of demographic attributes across segments
-- **Advanced Filtering**: Multi-dimensional filtering by behavioral metrics, value segments, and demographics
-- **Data Export**: Download filtered customer lists as CSV files
-
-## Quick Start
+## Local Setup
 
 ### 1. Open Terminal in Dashboard Folder
 
@@ -43,38 +32,16 @@ That's it! The dashboard will automatically open in your browser at `http://loca
 
 ---
 
-## Detailed Setup (Optional)
+## Features
 
-### Prerequisites
+- **3D Customer Landscape**: Interactive PCA-based visualization of customer behavioral clusters
+- **FM Matrix Analysis**: Frequency-Monetary value segmentation with quadrant-based insights
+- **Segment Migration Flow**: Sankey diagram showing customer distribution across behavioral and value segments
+- **Demographic Composition**: Comparative analysis of demographic attributes across segments
+- **Advanced Filtering**: Multi-dimensional filtering by behavioral metrics, value segments, and demographics
+- **Data Export**: Download filtered customer lists as CSV files
 
-- Python 3.8+ with pip installed
-
-### What Gets Installed
-
-Running `pip install -r requirements.txt` installs:
-- **streamlit** - Dashboard framework
-- **pandas** - Data manipulation
-- **numpy** - Numerical operations
-- **plotly** - Interactive visualizations
-
-### Using a Virtual Environment (Recommended for Clean Setup)
-
-If you want to avoid conflicts with other Python projects:
-
-```bash
-# Create environment
-python -m venv venv
-
-# Activate it
-# macOS/Linux:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# Install and run
-pip install -r requirements.txt
-streamlit run Group80_Cluster_Dashboard.py
-```
+---
 
 ## Using the Dashboard
 
