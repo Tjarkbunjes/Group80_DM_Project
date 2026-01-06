@@ -1,49 +1,53 @@
 """
 The AIAI Strategic Explorer - Deliverable 2
-Professional Customer Segmentation Dashboard for Executive Stakeholders
+Interactive Cluster Visualization Dashboard for Executive Stakeholders
 
 Architecture:
-- Left Sidebar: Targeting Parameters (Behavioral & Demographic Filters)
-- Main Area: Strategic Visualizations (3D Universe, Persona Profiling, Export)
+- Left Sidebar: Targeting Parameters & Filters (Value-Based & Behavioral & Demographic Filters)
+- Main Area: Strategic Visualizations (3D Universe, FM Matrix, Comparative Analysis, Export)
 """
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import matplotlib.pyplot as plt
-import seaborn as sns
+from pathlib import Path
 
-# --- Page Configuration ---
+# Page Configuration
 st.set_page_config(
     page_title="AIAI Strategic Explorer",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS with Green Palette (Light Theme) ---
+# Custom CSS with Green Palette (Light Theme)
 st.markdown("""
 <style>
-    /* Main background */
+    /* Main Layout */
     .stApp {
         background-color: #ffffff;
     }
 
-    /* Sidebar styling - clean white background */
+    /* Sidebar Configuration */
     [data-testid="stSidebar"] {
         background-color: #ffffff;
         border-right: 1px solid #e5e7eb;
         width: 400px !important;
         min-width: 400px !important;
+        font-size: 15px !important;
     }
 
     [data-testid="stSidebar"] > div:first-child {
         width: 400px !important;
     }
 
-    /* Sidebar text and labels */
+    /* Sidebar Typography */
+    [data-testid="stSidebar"] h2 {
+        color: #00411E !important;
+        font-weight: 700 !important;
+        font-size: 22px !important;
+    }
+
     [data-testid="stSidebar"] label {
         color: #374151 !important;
         font-weight: 500 !important;
@@ -55,63 +59,7 @@ st.markdown("""
         font-size: 14px !important;
     }
 
-    /* Sidebar general text */
-    [data-testid="stSidebar"] {
-        font-size: 15px !important;
-    }
-
-    /* Sidebar multiselect text */
-    [data-testid="stSidebar"] [data-baseweb="select"] span {
-        font-size: 15px !important;
-    }
-
-    /* Sidebar input text */
-    [data-testid="stSidebar"] input {
-        font-size: 15px !important;
-    }
-
-    /* Checkbox styling - GREEN - Multiple approaches for compatibility */
-    [data-testid="stSidebar"] input[type="checkbox"] {
-        accent-color: #00411E !important;
-        cursor: pointer !important;
-    }
-
-    /* For browsers that don't support accent-color */
-    [data-testid="stSidebar"] input[type="checkbox"]:checked {
-        background-color: #00411E !important;
-        border-color: #00411E !important;
-    }
-
-    /* Streamlit specific checkbox styling */
-    [data-testid="stSidebar"] input[type="checkbox"]:checked::before {
-        background-color: #00411E !important;
-    }
-
-    /* Alternative Streamlit checkbox selectors */
-    [data-testid="stCheckbox"] input[type="checkbox"] {
-        accent-color: #00411E !important;
-    }
-
-    [data-testid="stCheckbox"] input[type="checkbox"]:checked {
-        background-color: #00411E !important;
-        border-color: #00411E !important;
-    }
-
-    /* The checkmark itself */
-    [data-testid="stCheckbox"] span[data-testid="stMarkdownContainer"] {
-        color: #374151 !important;
-    }
-
-    /* Checkbox container styling */
-    [data-testid="stSidebar"] [data-testid="stCheckbox"] {
-        color: #374151 !important;
-    }
-
-    [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
-        color: #374151 !important;
-    }
-
-    /* Sidebar expander */
+    /* Sidebar Expanders */
     [data-testid="stSidebar"] [data-testid="stExpander"] {
         background-color: #ffffff !important;
         border: 1px solid #e5e7eb !important;
@@ -133,14 +81,33 @@ st.markdown("""
         padding: 15px !important;
     }
 
-    /* Sidebar headers h2 */
-    [data-testid="stSidebar"] h2 {
-        color: #00411E !important;
-        font-weight: 700 !important;
-        font-size: 22px !important;
+    /* Checkbox Styling */
+    [data-testid="stSidebar"] input[type="checkbox"],
+    [data-testid="stCheckbox"] input[type="checkbox"] {
+        accent-color: #00411E !important;
+        cursor: pointer !important;
     }
 
-    /* Multiselect and input styling */
+    [data-testid="stSidebar"] input[type="checkbox"]:checked,
+    [data-testid="stCheckbox"] input[type="checkbox"]:checked {
+        background-color: #00411E !important;
+        border-color: #00411E !important;
+    }
+
+    [data-testid="stCheckbox"] span[data-testid="stMarkdownContainer"],
+    [data-testid="stSidebar"] [data-testid="stCheckbox"],
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
+        color: #374151 !important;
+    }
+
+    /* Input and Select Styling */
+    [data-testid="stSidebar"] input:not([type="checkbox"]) {
+        background-color: #ffffff !important;
+        border-color: #d1d5db !important;
+        color: #374151 !important;
+        font-size: 15px !important;
+    }
+
     [data-testid="stSidebar"] [data-baseweb="select"] {
         background-color: #ffffff !important;
     }
@@ -151,19 +118,16 @@ st.markdown("""
         color: #374151 !important;
     }
 
-    [data-testid="stSidebar"] input:not([type="checkbox"]) {
-        background-color: #ffffff !important;
-        border-color: #d1d5db !important;
-        color: #374151 !important;
+    [data-testid="stSidebar"] [data-baseweb="select"] span {
+        font-size: 15px !important;
     }
 
-    /* Force multiselect container to stack vertically with dropdown on top */
+    /* Multiselect Tags */
     .stMultiSelect [data-baseweb="select"] > div:first-child {
         flex-direction: column-reverse !important;
         align-items: stretch !important;
     }
 
-    /* Style multiselect tags to be full width */
     .stMultiSelect [data-baseweb="tag"] {
         background-color: transparent !important;
         border: 1px solid #d1d5db !important;
@@ -176,17 +140,16 @@ st.markdown("""
         justify-content: space-between !important;
     }
 
-    /* X button on tags */
-    .stMultiSelect [data-baseweb="tag"] span[role="presentation"] {
-        color: #6b7280 !important;
-    }
-
     .stMultiSelect [data-baseweb="tag"]:hover {
         background-color: #f3f4f6 !important;
     }
 
-    /* Slider thumb (handle) - green */
-    .stSlider [data-baseweb="slider"] [role="slider"] {
+    .stMultiSelect [data-baseweb="tag"] span[role="presentation"] {
+        color: #6b7280 !important;
+    }
+
+    /* Slider Styling */
+    .stSlider [role="slider"] {
         background-color: #10b981 !important;
     }
 
@@ -195,62 +158,27 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Slider range values (min/max numbers) - black */
-    [data-testid="stSidebar"] .stSlider label {
-        color: #000000 !important;
-    }
-
-    [data-testid="stSidebar"] .stSlider p {
-        color: #000000 !important;
-    }
-
-    [data-testid="stSidebar"] .stSlider div {
-        color: #000000 !important;
-    }
-
+    [data-testid="stSidebar"] .stSlider label,
+    [data-testid="stSidebar"] .stSlider p,
+    [data-testid="stSidebar"] .stSlider div,
     [data-testid="stSidebar"] .stSlider span {
         color: #000000 !important;
     }
 
-    /* Remove all backgrounds from slider container */
-    .stSlider > div {
-        background-color: transparent !important;
-    }
-
-    .stSlider > div > div {
-        background-color: transparent !important;
-    }
-
-    /* The actual track/rail - make it black, not red */
-    div[data-baseweb="slider"] div[data-testid="stTickBar"] > div {
-        background-color: #000000 !important;
-    }
-
-    div[data-baseweb="slider"] > div > div > div {
-        background-color: #000000 !important;
-    }
-
-    /* Target the inner track element specifically */
-    [data-baseweb="slider"] [role="presentation"] {
-        background-color: #000000 !important;
-    }
-
-    /* Override any red color */
+    .stSlider > div,
+    .stSlider > div > div,
     .stSlider * {
         background-color: transparent !important;
     }
 
-    /* But keep the track black */
+    div[data-baseweb="slider"] div[data-testid="stTickBar"] > div,
+    div[data-baseweb="slider"] > div > div > div,
+    [data-baseweb="slider"] [role="presentation"],
     .stSlider [data-baseweb="slider"] > div > div > div {
         background-color: #000000 !important;
     }
 
-    /* And the thumb green */
-    .stSlider [role="slider"] {
-        background-color: #10b981 !important;
-    }
-
-    /* Button styling */
+    /* Button Styling */
     [data-testid="stSidebar"] button[kind="secondary"] {
         background-color: #ffffff !important;
         color: #10b981 !important;
@@ -264,7 +192,6 @@ st.markdown("""
         color: #059669 !important;
     }
 
-    /* Primary button for Select All */
     [data-testid="stSidebar"] button[kind="primary"] {
         background-color: #10b981 !important;
         color: #ffffff !important;
@@ -278,7 +205,7 @@ st.markdown("""
         background-color: #059669 !important;
     }
 
-    /* Headers */
+    /* Main Content Headers */
     h1 {
         color: #00411E !important;
         font-weight: 700 !important;
@@ -288,7 +215,7 @@ st.markdown("""
         color: #00411E !important;
     }
 
-    /* Metrics cards */
+    /* Metrics Cards */
     [data-testid="stMetricValue"] {
         color: #10b981 !important;
         font-size: 2rem !important;
@@ -306,7 +233,7 @@ st.markdown("""
         color: #059669 !important;
     }
 
-    /* Section headers */
+    /* Custom Classes */
     .section-header {
         background: #00411E;
         padding: 12px 20px;
@@ -320,7 +247,6 @@ st.markdown("""
         color: white !important;
     }
 
-    /* Data source footer */
     .data-source {
         background-color: #d1fae5;
         color: #065f46;
@@ -331,7 +257,6 @@ st.markdown("""
         margin-top: 20px;
     }
 
-    /* Cluster badge */
     .cluster-badge {
         display: inline-block;
         padding: 6px 14px;
@@ -343,12 +268,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Custom Color Palette (from Clustering Code) ---
+# Custom Color Palette (from Clustering Code)
 CUSTOM_HEX = [
     "#00411E", "#00622D", "#00823C", "#45AF28", "#6BCF5D", "#D5E6D0", "#212121", "#313131", "#595959", "#909090"
 ]
 
-# --- Behavioral Cluster Configuration (Group 80 Green Palette) ---
+# Behavioral Cluster Configuration (Group 80 Green Palette) 
 CLUSTER_CONFIG = {
     0: {
         'name': 'Family Travelers',
@@ -377,11 +302,16 @@ CLUSTER_CONFIG = {
     }
 }
 
-# --- Data Loading ---
+# Data Loading
 @st.cache_data
 def load_data():
     """Load and prepare customer segmentation data."""
-    df = pd.read_csv('data/clustering_data/customer_segmentation_profiles.csv')
+
+    # Get path to current script directory
+    make_dir = Path(__file__).parent
+    data_path = make_dir / 'customer_segmentation_profiles.csv'
+
+    df = pd.read_csv(data_path)
 
     # Add behavioral cluster names
     df['cluster_name'] = df['Behavioral_Cluster'].map(lambda x: CLUSTER_CONFIG.get(x, {}).get('name', f'Cluster {x}'))
@@ -407,13 +337,14 @@ def load_data():
 
     return df
 
-# --- Visualization Functions ---
+# Visualization Functions
 
 def create_3d_universe(df: pd.DataFrame) -> go.Figure:
-    """Create the 3D scatter plot - The Universe visualization."""
+    """Create the 3D scatter plot."""
 
     fig = go.Figure()
 
+    # Plot each cluster separately
     for cluster_id in sorted(df['Behavioral_Cluster'].unique()):
         cluster_df = df[df['Behavioral_Cluster'] == cluster_id]
         cluster_info = CLUSTER_CONFIG.get(cluster_id, {})
@@ -508,64 +439,6 @@ def create_3d_universe(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
-    """Create stacked bar chart for demographic distribution."""
-
-    # Count by cluster and attribute
-    cross_tab = pd.crosstab(df['cluster_name'], df[attribute], normalize='index') * 100
-
-    fig = go.Figure()
-
-    # Use custom green palette for demographic bars
-    colors_demo = [CUSTOM_HEX[3], CUSTOM_HEX[2], CUSTOM_HEX[1], CUSTOM_HEX[4], CUSTOM_HEX[5]]
-
-    for i, attr_val in enumerate(cross_tab.columns):
-        fig.add_trace(go.Bar(
-            y=cross_tab.index,
-            x=cross_tab[attr_val],
-            name=str(attr_val),
-            orientation='h',
-            marker_color=colors_demo[i % len(colors_demo)],
-            text=[f"{val:.1f}%" for val in cross_tab[attr_val]],
-            textposition='inside',
-            hovertemplate='<b>%{y}</b><br>%{fullData.name}: %{x:.1f}%<extra></extra>'
-        ))
-
-    fig.update_layout(
-        barmode='stack',
-        paper_bgcolor='#ffffff',
-        plot_bgcolor='#f9fafb',
-        font=dict(color='#1f2937'),
-        xaxis=dict(
-            title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#047857')),
-            gridcolor='#d1d5db',
-            tickfont=dict(color='#065f46'),
-            range=[0, 100]
-        ),
-        yaxis=dict(
-            title=dict(text='<b>Customer Segment</b>', font=dict(color='#047857')),
-            tickfont=dict(color='#1f2937'),
-            showgrid=False
-        ),
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=1.02,
-            xanchor='center',
-            x=0.5,
-            bgcolor='rgba(255, 255, 255, 0.9)',
-            bordercolor='#d1d5db',
-            borderwidth=1,
-            font=dict(color='#1f2937', size=10),
-            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#1f2937', size=11))
-        ),
-        margin=dict(l=10, r=10, t=80, b=40),
-        height=400
-    )
-
-    return fig
-
-
 def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataFrame) -> go.Figure: 
     """Create combined FM Matrix scatter plot colored by behavioral clusters.
 
@@ -576,17 +449,6 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
 
     # Use the combined column directly
     fg_column = 'fm_segment_combined'
-
-    if fg_column not in df_filtered.columns:
-        # Return empty figure if no FM data
-        fig = go.Figure()
-        fig.update_layout(
-            title="FM Matrix data not available",
-            paper_bgcolor='#ffffff',
-            plot_bgcolor='#f9fafb',
-            font=dict(color='#1f2937')
-        )
-        return fig
 
     # Filter to only rows with FM segment data for DISPLAY
     df_with_fm = df_filtered[df_filtered[fg_column].notna()].copy()
@@ -669,8 +531,8 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
     atrisk_y = min_mon * 1.1
 
     # Elite - top right corner of Champions quadrant
-    elite_x = max_freq * 0.95;
-    elite_y = max_mon * 0.95;
+    elite_x = max_freq * 0.95
+    elite_y = max_mon * 0.95
 
     # Add quadrant labels as annotations
     fig.add_annotation(x=champions_x, y=champions_y,
@@ -749,16 +611,6 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
     # Always use fm_segment_combined
     fg_column = 'fm_segment_combined'
 
-    if fg_column not in df_selected.columns:
-        # Return empty figure if no FM data
-        fig = go.Figure()
-        fig.update_layout(
-            title="FM segment data not available",
-            paper_bgcolor='#ffffff',
-            height=400
-        )
-        return fig
-
     # Filter to customers with FM segments
     df_sel_fm = df_selected[df_selected[fg_column].notna()].copy()
 
@@ -790,7 +642,6 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
         # Calculate percentages
         cluster_total = df_sel_fm[df_sel_fm['cluster_name'] == cluster].shape[0]
         pct_of_cluster = (count / cluster_total * 100) if cluster_total > 0 else 0
-        pct_of_total = (count / len(df_sel_fm) * 100) if len(df_sel_fm) > 0 else 0
 
         hover_texts.append(
             f"{cluster} → {fm_seg}<br>"
@@ -855,6 +706,64 @@ def create_segment_migration_sankey(df_selected: pd.DataFrame) -> go.Figure:
         plot_bgcolor='#ffffff',
         height=500,
         margin=dict(l=10, r=10, t=60, b=10)
+    )
+
+    return fig
+
+
+def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
+    """Create stacked bar chart for demographic distribution."""
+
+    # Count by cluster and attribute
+    cross_tab = pd.crosstab(df['cluster_name'], df[attribute], normalize='index') * 100
+
+    fig = go.Figure()
+
+    # Use custom green palette for demographic bars
+    colors_demo = [CUSTOM_HEX[3], CUSTOM_HEX[2], CUSTOM_HEX[1], CUSTOM_HEX[4], CUSTOM_HEX[5]]
+
+    for i, attr_val in enumerate(cross_tab.columns):
+        fig.add_trace(go.Bar(
+            y=cross_tab.index,
+            x=cross_tab[attr_val],
+            name=str(attr_val),
+            orientation='h',
+            marker_color=colors_demo[i % len(colors_demo)],
+            text=[f"{val:.1f}%" for val in cross_tab[attr_val]],
+            textposition='inside',
+            hovertemplate='<b>%{y}</b><br>%{fullData.name}: %{x:.1f}%<extra></extra>'
+        ))
+
+    fig.update_layout(
+        barmode='stack',
+        paper_bgcolor='#ffffff',
+        plot_bgcolor='#f9fafb',
+        font=dict(color='#1f2937'),
+        xaxis=dict(
+            title=dict(text=f'<b>Distribution (%)</b>', font=dict(color='#047857')),
+            gridcolor='#d1d5db',
+            tickfont=dict(color='#065f46'),
+            range=[0, 100]
+        ),
+        yaxis=dict(
+            title=dict(text='<b>Customer Segment</b>', font=dict(color='#047857')),
+            tickfont=dict(color='#1f2937'),
+            showgrid=False
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='center',
+            x=0.5,
+            bgcolor='rgba(255, 255, 255, 0.9)',
+            bordercolor='#d1d5db',
+            borderwidth=1,
+            font=dict(color='#1f2937', size=10),
+            title=dict(text=f'<b>{attribute}</b>', font=dict(color='#1f2937', size=11))
+        ),
+        margin=dict(l=10, r=10, t=80, b=40),
+        height=400
     )
 
     return fig
