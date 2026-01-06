@@ -1,10 +1,16 @@
-<p>
-  <img src="img/Group80_Background.png" alt="Group80 Background" />
-</p>
-
 # AIAI Customer Segmentation Dashboard
 
-An interactive Streamlit dashboard for exploring customer segmentation analysis for Amazing International Airlines Inc. (AIAI). This tool provides comprehensive visualization and filtering capabilities across behavioral, value-based, and demographic customer segments.
+An interactive Streamlit dashboard for exploring customer segmentation analysis for Amazing International Airlines Inc. (AIAI). This tool provides visualization and filtering capabilities across behavioral, value-based, and demographic customer segments.
+
+## Live Demo
+
+**Access the dashboard online (no installation required):**
+
+**[https://group80dmproject.streamlit.app](https://group80dmproject.streamlit.app)**
+
+Simply click the link above to start exploring the customer segmentation analysis immediately.
+
+---
 
 ## Features
 
@@ -15,75 +21,60 @@ An interactive Streamlit dashboard for exploring customer segmentation analysis 
 - **Advanced Filtering**: Multi-dimensional filtering by behavioral metrics, value segments, and demographics
 - **Data Export**: Download filtered customer lists as CSV files
 
-## Prerequisites
+## Quick Start
 
-- Python 3.8 or higher
-- pip (Python package installer)
+### 1. Open Terminal in Dashboard Folder
 
-## Installation
+Navigate to the `GROUP80_DM_Dashboard` folder and open your terminal here.
 
-### Step 1: Download the Dashboard
-
-Clone or download this repository to your local machine.
-
-### Step 2: Navigate to the Dashboard Directory
-
-Open your terminal (Command Prompt on Windows, Terminal on macOS/Linux) and navigate to the dashboard folder:
-
-```bash
-cd path/to/GROUP80_DM_Dashboard
-```
-
-Replace `path/to/` with the actual path where you downloaded the dashboard.
-
-### Step 3: Install Required Dependencies
-
-Install all required Python packages using pip:
+### 2. Install Dependencies (First Time Only)
 
 ```bash
 pip install -r requirements.txt
 ```
 
-This will install:
-- streamlit (v1.52.2)
-- pandas (v2.3.3)
-- numpy (v2.3.5)
-- plotly (v6.5.0)
-
-**Note**: If you're using a virtual environment (recommended), activate it before installing dependencies:
-
-```bash
-# Create virtual environment (optional but recommended)
-python -m venv venv
-
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
-
-# Then install requirements
-pip install -r requirements.txt
-```
-
-## Running the Dashboard
-
-### Step 4: Launch Streamlit
-
-Once all dependencies are installed, run the dashboard with:
+### 3. Run the Dashboard
 
 ```bash
 streamlit run Group80_Cluster_Dashboard.py
 ```
 
-### Step 5: Access the Dashboard
+That's it! The dashboard will automatically open in your browser at `http://localhost:8501`.
 
-After running the command, Streamlit will:
-1. Start a local web server
-2. Automatically open your default web browser
-3. Display the dashboard at `http://localhost:8501`
+---
 
-If the browser doesn't open automatically, you can manually navigate to the URL shown in the terminal (typically `http://localhost:8501`).
+## Detailed Setup (Optional)
+
+### Prerequisites
+
+- Python 3.8+ with pip installed
+
+### What Gets Installed
+
+Running `pip install -r requirements.txt` installs:
+- **streamlit** - Dashboard framework
+- **pandas** - Data manipulation
+- **numpy** - Numerical operations
+- **plotly** - Interactive visualizations
+
+### Using a Virtual Environment (Recommended for Clean Setup)
+
+If you want to avoid conflicts with other Python projects:
+
+```bash
+# Create environment
+python -m venv venv
+
+# Activate it
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# Install and run
+pip install -r requirements.txt
+streamlit run Group80_Cluster_Dashboard.py
+```
 
 ## Using the Dashboard
 
