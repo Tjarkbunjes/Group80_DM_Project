@@ -87,38 +87,7 @@ The left sidebar provides comprehensive filtering options:
 - Download the complete filtered dataset as a CSV file
 - Exported data includes cluster assignments, behavioral metrics, and demographic attributes
 
-## Data Requirements
-
-The dashboard expects a file named `customer_segmentation_profiles.csv` in the same directory. This file should contain:
-
-- Customer identifiers (Loyalty#)
-- Behavioral cluster assignments
-- Demographic cluster assignments
-- PCA coordinates (pca_1, pca_2, pca_3)
-- Behavioral metrics (redemption_frequency, companion_flight_ratio, flight_regularity, distance_variability)
-- FM analysis metrics (Frequency, Monetary, fm_segment_combined, fm_tier_combined)
-- Demographic attributes (Province, City, Gender, Education, Income, Marital Status, etc.)
-
-## Troubleshooting
-
-### Port Already in Use
-
-If you see an error that port 8501 is already in use, you can:
-- Stop the existing Streamlit process
-- Run on a different port: `streamlit run Group80_Cluster_Dashboard.py --server.port 8502`
-
-### Module Not Found Errors
-
-If you encounter import errors:
-1. Ensure you've installed all requirements: `pip install -r requirements.txt`
-2. Verify you're using the correct Python environment
-3. Check your Python version is 3.8 or higher: `python --version`
-
-### Data File Not Found
-
-If the dashboard shows a "Data file not found" error:
-- Ensure `customer_segmentation_profiles.csv` is in the same directory as the dashboard script
-- Check the file name spelling matches exactly
+---
 
 ## Project Context
 
@@ -128,6 +97,6 @@ This dashboard is part of Deliverable 2 for the Data Mining course (Group 80), f
 
 Group 80 - Data Mining Project Team
 
-## License
-
-This project is developed for academic purposes as part of a university course project.
+20250487 - PaulHarnos
+20250489 - Felix Diederichs
+20250505 - Tjark Bunjes
