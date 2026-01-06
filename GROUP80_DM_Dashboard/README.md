@@ -10,26 +10,6 @@ An interactive Streamlit dashboard for exploring customer segmentation analysis 
 
 Simply click the link above to start exploring the customer segmentation analysis immediately.
 
-## Local Setup
-
-### 1. Open Terminal in Dashboard Folder
-
-Navigate to the `GROUP80_DM_Dashboard` folder and open your terminal here.
-
-### 2. Install Dependencies (First Time Only)
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Run the Dashboard
-
-```bash
-streamlit run Group80_Cluster_Dashboard.py
-```
-
-That's it! The dashboard will automatically open in your browser at `http://localhost:8501`.
-
 ---
 
 ## Features
