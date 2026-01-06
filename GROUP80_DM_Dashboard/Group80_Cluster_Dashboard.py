@@ -596,7 +596,7 @@ def create_fm_matrix_combined(df_filtered: pd.DataFrame, df_population: pd.DataF
         ),
         hovermode='closest',
         height=500,
-        margin=dict(l=50, r=20, t=60, b=50)  # Increased top margin for legend
+        margin=dict(l=50, r=20, t=60, b=50)
     )
 
     return fig
@@ -770,18 +770,15 @@ def create_demographic_split(df: pd.DataFrame, attribute: str) -> go.Figure:
 
 
 def main():
-    # Load data
-    try:
-        df_full = load_data()
-    except FileNotFoundError as e:
-        st.error(f"Data file not found: {e}")
-        return
 
-    # ==================== SIDEBAR: FILTERS ====================
+    # Load data
+    df_full = load_data()
+
+    # Filters 
     with st.sidebar:
         st.markdown("## Filters")
 
-        # --- FOCUS GROUP FILTER ---
+        # Focus Group Filter
         st.markdown("#### Focus Group")
         focus_group_option = st.radio(
             "Focus Group",
@@ -793,10 +790,10 @@ def main():
 
         st.divider()
 
-        # --- VALUE-BASED FILTERS ---
+        # Value-Based Filters
         st.markdown("#### Cluster")
         with st.expander("Value-Based Filters", expanded=False):
-            # Value-Based Segments - Using nested expander for dropdown effect
+            # Value-Based Segments
             with st.expander("**Value-Based Segments**", expanded=False):
                 fm_segment_options = sorted([seg for seg in df_full['fm_segment_combined'].unique() if pd.notna(seg)])
                 selected_fm_segments = []
@@ -828,10 +825,10 @@ def main():
                 step=10.0
             )
 
-        # --- BEHAVIORAL FILTERS ---
+        # Behavioral Filters
         with st.expander("Behavioral Filters", expanded=True):
 
-            # Customer Segments - Using nested expander for dropdown effect
+            # Customer Segments
             with st.expander("**Customer Segments**", expanded=False):
                 segment_options = [CLUSTER_CONFIG[i]['name'] for i in sorted(CLUSTER_CONFIG.keys())]
                 selected_segments = []
@@ -876,7 +873,7 @@ def main():
                 step=0.01
             )
 
-        # --- DEMOGRAPHIC FILTERS ---
+        # Demographic Filters
         with st.expander("Demographic Filters", expanded=False):
             # Province
             with st.expander("**Province**", expanded=False):
@@ -928,7 +925,7 @@ def main():
 
         st.divider()
 
-    # ==================== APPLY FILTERS ====================
+    # Apply Filters to Data
     df_filtered = df_full.copy()
 
     # Apply Focus Group filter
@@ -998,7 +995,7 @@ def main():
         (df_filtered['Monetary'] <= monetary_range[1])
     ]
 
-    # ==================== MAIN HEADER ====================
+    # Main Header
     st.markdown("""
     <div style='text-align: center; padding: 20px 0;'>
     <h1 style='font-size: 2.5rem; margin: 0; color: #00411E;'>AIAI Customer Segmentation Strategy</h1>
@@ -1008,8 +1005,13 @@ def main():
 
     st.markdown("---")
 
-    # ==================== ROW 1: 3D VISUALIZATION ====================
-    st.markdown("<div class='section-header'><h3 style='margin: 0;'>3D Customer Landscape</h3></div>", unsafe_allow_html=True)
+    # 3D Visualization
+    st.markdown("""<div class='section-header'>
+                    <h3 style='margin: 0;'>
+                        3D Customer Landscape
+                    </h3>
+                </div>""", 
+                unsafe_allow_html=True)
     
     # Add description paragraph
     st.markdown("""
@@ -1031,7 +1033,7 @@ def main():
 
     st.markdown("---")
 
-    # ==================== ROW 2: FM MATRIX SEGMENTATION ====================
+    # FM Matrix Segmentation
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>FM Matrix: Value-Based Segmentation</h3></div>", unsafe_allow_html=True)
 
     # Add description paragraph with minimal spacing
@@ -1054,7 +1056,7 @@ def main():
 
     st.markdown("---")
 
-    # ==================== ROW 3: COMPARATIVE ANALYSIS ====================
+    # Comparative Analysis: Deep-Dive
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>Comparative Analysis: Deep-Dive</h3></div>", unsafe_allow_html=True)
 
     # Add description paragraph
@@ -1096,7 +1098,7 @@ def main():
 
     st.markdown("---")
 
-    # ==================== ROW 4: DATA EXPORT ====================
+    # Data Export
     st.markdown("<div class='section-header'><h3 style='margin: 0;'>Data Export</h3></div>", unsafe_allow_html=True)
 
     if len(df_filtered) > 0:
