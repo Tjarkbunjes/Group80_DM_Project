@@ -1,0 +1,142 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Pakete für Layout & Schriften ---
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{tocloft}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{amssymb}
+
+% --- Seitenränder ---
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\setmainfont{Carlito}
+
+% --- Farben ---
+\definecolor{wordGray}{RGB}{94, 102, 107}   % Das Grau der Überschriften 
+\definecolor{highlightyellow}{RGB}{255, 255, 0}
+\newcommand{\hl}[1]{\colorbox{highlightyellow}{#1}}
+
+% --- Inhaltsverzeichnis (TOC) Styling ---
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\contentsname}{\hfill\Large\bfseries\color{wordGray} TABLE OF CONTENTS \hfill}
+\renewcommand{\cftaftertoctitle}{\hfill}
+
+% --- Überschriften (Grau, Fett, Großbuchstaben wo nötig) ---
+\titleformat{\section}{\color{wordGray}\normalfont\Large\bfseries}{\thesection.}{1em}{\MakeUppercase}
+\titlespacing*{\section}{0pt}{18pt}{6pt}
+
+\titleformat{\subsection}{\color{wordGray}\normalfont\large\bfseries}{\thesubsection.}{1em}{}
+\titlespacing*{\subsection}{0pt}{12pt}{4pt}
+
+\titleformat{\subsubsection}{\color{wordGray}\normalfont\normalsize\bfseries}{\thesubsubsection.}{1em}{}
+
+% --- Layout Einstellungen ---
+\setstretch{1.15}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% --- Seitenzahlen unten rechts ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[R]{\thepage} % Seitenzahl rechts unten
+
+% --- Dokumentenbeginn ---
+\begin{document}
+
+% --- DECKBLATT ---
+\pagenumbering{roman}
+\begin{titlepage}
+    \centering
+    \vspace*{0.7cm}
+    {\large\bfseries\color{wordGray} DATA MINING PROJECT \par}
+    {\large\color{wordGray} Master in Data Science and Advanced Analytics Analytics \par}
+    \vspace{1cm}
+    {\large\bfseries\color{wordGray} NOVA Information Management School \par}
+    {\large\color{wordGray} Universidade Nova de Lisboa \par}
+    \vspace{4cm}
+    {\Huge\bfseries Title of Report \par}
+    \vspace{4cm}
+    {\Large\bfseries Group 99 \par}
+    \vspace{1cm}
+    {\large
+    Student1 Name, 20001111 \\
+    Student2 Name, 20002222 \\
+    Student3 Name, 20003333 \\
+    Student4 Name, 20004444 \par}
+    \vfill
+    {\large Fall/Spring Semester 2024-2025 \par}
+\end{titlepage}
+
+% --- INHALTSVERZEICHNIS ---
+\newpage
+\tableofcontents
+
+% --- HAUPTTEIL ---
+\newpage
+\pagenumbering{arabic} % Wechsel zu 1, 2, 3...
+
+\section{Introduction}
+The following instructions should be followed for the writing of the report: \par
+This word file provides a "standard" report structure. The format of the report (headers, spacings, fonts, and other formations) should be employed as defined in this template. \par
+\hl{Text highlighted in yellow like this} are for your information, and not part of the formatting. Make sure to remove them from your report. 
+
+\section{Section Heading Level 1}
+\subsection{Level 2 Title}
+Sample text with the inclusion of figures and tables. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/Picture 1.png}
+    \caption*{Figure 2.1 – Illustrative figure}
+\end{figure}
+\hl{Note that figure labels should be included after the figure.}
+
+\subsection{Level 2 Title}
+\begin{table}[h]
+    \centering
+    \caption*{Table 2.1 – Illustrative table} 
+    \begin{tabular}{c c}
+        \hline
+        \textbf{Title} & \textbf{Title} \\ \hline
+        Text & Number \\
+        Text & Number \\
+        Text & Number \\ \hline
+    \end{tabular}
+\end{table}
+\hl{Note that table labels should always be included before the table.} 
+
+\subsubsection{Level 3 title}
+Example of an unnumbered list: 
+\begin{itemize}[label={\tiny$\blacksquare$}]
+    \item Item 1
+    \item Item 2
+    \item Item 3
+\end{itemize}
+
+\section{Another Section Heading}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+
+% --- BIBLIOGRAPHIE ---
+\newpage
+\section{Bibliographical References \hl{(OPTIONAL, NOT INCLUDED IN PAGE LIMIT)}}
+\hl{Use APA Style for the entire document} \par
+Author, A. A., Author, B. B., \& Author, C. C. (Year). Title of article. \textit{Title of Periodical, volume number (issue number), pages.} 
+
+\newpage
+\section*{APPENDIX A \hl{(OPTIONAL, NOT INCLUDED IN PAGE LIMIT)}}
+[Appendixes are for materials, tables, or more explanation material only done by the student] 
+
+\newpage
+\section*{ANNEXES \hl{(OPTIONAL, NOT INCLUDED IN PAGE LIMIT)}}
+[Annexes are optional, since they have material and sources not developed by the students] 
+
+\end{document}
